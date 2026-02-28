@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roles - Agent Team Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="/ui/css/styles.css">
+    <style>
+        .role-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+        .role-card:hover {
+            border-color: var(--primary);
+        }
+        .role-card.selected {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .role-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .role-description {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        .role-section {
+            margin-top: 1rem;
+        }
+        .role-section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        .role-inherits {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .inherit-badge {
+            background: var(--warning);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+        }
+        .skills-count {
+            background: var(--success);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+        }
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1rem;
+        }
+        .config-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        .config-panel h3 {
+            margin-bottom: 1rem;
+        }
+        .yaml-editor {
+            width: 100%;
+            min-height: 300px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            background: var(--bg);
+            resize: vertical;
+        }
+        .yaml-editor:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .config-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        .info-box strong {
+            color: var(--primary);
+        }
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .skill-badge {
+            background: var(--bg);
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .skill-badge.core {
+            background: var(--primary);
+            color: white;
+        }
+        .skill-badge.role {
+            background: var(--success);
+            color: white;
+        }
+        .skill-badge.inherited {
+            background: var(--warning);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" x-data="rolesApp()">
+        <!-- Header -->
+        <header class="header">
+            <h1>Role Configuration</h1>
+            <p class="subtitle">Configure roles and skill inheritance</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <a href="/ui/" class="nav-link">Dashboard</a>
+            <a href="/ui/agents.html" class="nav-link">Agents</a>
+            <a href="/ui/skills.html" class="nav-link">Skills</a>
+            <a href="/ui/roles.html" class="nav-link active">Roles</a>
+        </nav>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <strong>Tip:</strong> Tech Lead and SA roles support inheritance. Tech Lead inherits from dev-fe + dev-be,
+            giving it 17 skills total. Customize roles by editing the YAML configuration below.
+        </div>
+
+        <!-- Roles Grid -->
+        <section class="section">
+            <h2>Available Roles</h2>
+            <div class="roles-grid" id="roles-grid">
+                <template x-for="role in roles" :key="role.name">
+                    <div class="role-card" :class="{ selected: selectedRole?.name === role.name }"
+                         @click="selectRole(role)">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <div class="role-name" x-text="role.displayName || role.name"></div>
+                                <div class="role-description" x-text="role.description"></div>
+                            </div>
+                            <span class="skills-count" x-text="getSkillCount(role) + ' skills'"></span>
+                        </div>
+
+                        <!-- Inheritance -->
+                        <div class="role-section" x-show="role.skills?.inherit?.length">
+                            <div class="role-section-title">Inherits from</div>
+                            <div class="role-inherits">
+                                <template x-for="parent in role.skills?.inherit" :key="parent">
+                                    <span class="inherit-badge" x-text="parent"></span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="role-section" x-show="role.skills?.include?.length">
+                            <div class="role-section-title">Skill Categories</div>
+                            <div class="skill-list">
+                                <template x-for="inc in role.skills?.include" :key="inc.category || inc">
+                                    <span class="skill-badge" x-text="inc.category || inc"></span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- Role Detail -->
+        <section class="section" x-show="selectedRole" x-cloak>
+            <h2>Role Details: <span x-text="selectedRole?.name"></span></h2>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div>
+                    <div class="role-section-title">Core Skills</div>
+                    <div class="skill-list">
+                        <template x-for="skill in roleDetails.core" :key="skill">
+                            <span class="skill-badge core" x-text="skill"></span>
+                        </template>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="role-section-title">Role Skills</div>
+                    <div class="skill-list">
+                        <template x-for="skill in roleDetails.role" :key="skill">
+                            <span class="skill-badge role" x-text="skill"></span>
+                        </template>
+                    </div>
+                </div>
+
+                <div x-show="roleDetails.inherited?.length">
+                    <div class="role-section-title">Inherited Skills</div>
+                    <div class="skill-list">
+                        <template x-for="skill in roleDetails.inherited" :key="skill">
+                            <span class="skill-badge inherited" x-text="skill"></span>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <strong>Total Skills: <span x-text="roleDetails.all?.length || 0"></span></strong>
+            </div>
+        </section>
+
+        <!-- YAML Configuration -->
+        <div class="config-panel">
+            <h3>Project Role Configuration</h3>
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+                Edit <code>.claude/roles.yaml</code> to customize roles for this project. Changes here override defaults.
+            </p>
+
+            <textarea class="yaml-editor" x-model="yamlConfig"
+                      @input="yamlChanged = true"></textarea>
+
+            <div class="config-actions">
+                <button class="btn btn-primary" @click="saveConfig()" :disabled="!yamlChanged || saving">
+                    <span x-show="saving">Saving...</span>
+                    <span x-show="!saving">Save Configuration</span>
+                </button>
+                <button class="btn btn-secondary" @click="resetConfig()">
+                    Reset to Default
+                </button>
+            </div>
+
+            <div x-show="saveMessage" :style="{ color: saveSuccess ? 'var(--success)' : 'var(--danger)', marginTop: '1rem' }">
+                <span x-text="saveMessage"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function rolesApp() {
+            return {
+                roles: [],
+                selectedRole: null,
+                roleDetails: { core: [], role: [], inherited: [], all: [] },
+                yamlConfig: '',
+                yamlChanged: false,
+                saving: false,
+                saveMessage: '',
+                saveSuccess: false,
+
+                async init() {
+                    await this.loadRoles();
+                    await this.loadConfig();
+                },
+
+                async loadRoles() {
+                    try {
+                        const response = await fetch('/api/roles');
+                        const config = await response.json();
+                        this.roles = Object.entries(config.roles || {}).map(([name, def]) => ({
+                            name,
+                            ...def
+                        }));
+                    } catch (error) {
+                        console.error('Failed to load roles:', error);
+                    }
+                },
+
+                async loadConfig() {
+                    try {
+                        const response = await fetch('/api/roles');
+                        const config = await response.json();
+                        this.yamlConfig = JSON.stringify(config, null, 2);
+                    } catch (error) {
+                        console.error('Failed to load config:', error);
+                    }
+                },
+
+                getSkillCount(role) {
+                    let count = 3; // Core skills
+
+                    if (role.skills?.include) {
+                        count += role.skills.include.length * 2; // Estimate
+                    }
+
+                    if (role.skills?.inherit) {
+                        // Add inherited counts
+                        role.skills.inherit.forEach(parent => {
+                            if (parent === 'dev-fe' || parent === 'dev-be') {
+                                count += 5;
+                            }
+                        });
+                    }
+
+                    return count;
+                },
+
+                async selectRole(role) {
+                    this.selectedRole = role;
+
+                    // Load role details
+                    try {
+                        const response = await fetch(`/api/roles/${role.name}`);
+                        this.roleDetails = await response.json();
+                    } catch (error) {
+                        console.error('Failed to load role details:', error);
+                    }
+                },
+
+                async saveConfig() {
+                    this.saving = true;
+                    this.saveMessage = '';
+
+                    try {
+                        const config = JSON.parse(this.yamlConfig);
+                        const response = await fetch('/api/roles', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(config)
+                        });
+
+                        if (response.ok) {
+                            this.saveSuccess = true;
+                            this.saveMessage = 'Configuration saved successfully!';
+                            this.yamlChanged = false;
+                            await this.loadRoles();
+                        } else {
+                            const error = await response.json();
+                            this.saveSuccess = false;
+                            this.saveMessage = 'Error: ' + error.error;
+                        }
+                    } catch (error) {
+                        this.saveSuccess = false;
+                        this.saveMessage = 'Error: Invalid JSON format';
+                    }
+
+                    this.saving = false;
+                },
+
+                async resetConfig() {
+                    await this.loadConfig();
+                    this.yamlChanged = false;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

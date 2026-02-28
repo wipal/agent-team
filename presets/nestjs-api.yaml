@@ -1,0 +1,30 @@
+# NestJS API Preset
+# Complete NestJS backend setup
+
+name: nestjs-api
+description: "NestJS API backend with PostgreSQL and Prisma"
+author: agent-team-template
+
+variants:
+  framework: nestjs
+  database: postgresql
+  orm: prisma
+  testing: jest
+  validation: zod
+  auth: passport-jwt
+
+model:
+  default: claude-sonnet-4
+
+skills:
+  - api-design
+  - nestjs-patterns
+  - prisma-patterns
+  - database-design
+  - security
+  - testing-backend
+
+mcp:
+  - context7
+  - github
+  - postgresql

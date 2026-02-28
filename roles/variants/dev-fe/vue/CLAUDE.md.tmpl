@@ -1,0 +1,184 @@
+# Vue Variant Additions
+
+## Additional Tech Stack
+- Framework: Vue 3 (Composition API)
+- Build: Vite
+- State: Pinia
+- Router: Vue Router 4
+- Language: TypeScript
+
+## Vue-Specific Patterns
+
+### Component Structure
+```
+src/
+├── components/        # Shared components
+│   └── ComponentName/
+│       ├── ComponentName.vue
+│       ├── ComponentName.test.ts
+│       └── index.ts
+├── composables/       # Composable functions (hooks)
+│   └── useFeature.ts
+├── views/             # Route-level components
+├── stores/            # Pinia stores
+│   └── useUserStore.ts
+├── router/            # Vue Router config
+└── types/             # TypeScript types
+```
+
+### Component Template
+```vue
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import type { PropType } from 'vue';
+
+// Props
+interface Props {
+  title: string;
+  items?: string[];
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  items: () => [],
+});
+
+// Emits
+const emit = defineEmits<{
+  (e: 'update', value: string): void;
+}>();
+
+// Reactive state
+const count = ref(0);
+
+// Computed
+const doubled = computed(() => count.value * 2);
+
+// Methods
+function increment() {
+  count.value++;
+  emit('update', String(count.value));
+}
+
+// Lifecycle
+onMounted(() => {
+  console.log('Component mounted');
+});
+</script>
+
+<template>
+  <div class="component-name">
+    <h2>{{ title }}</h2>
+    <button @click="increment">
+      Count: {{ count }}
+    </button>
+  </div>
+</template>
+
+<style scoped>
+.component-name {
+  /* Styles here */
+}
+</style>
+```
+
+### Composable Pattern
+```typescript
+// composables/useFeature.ts
+import { ref, computed } from 'vue';
+
+export function useFeature(initialValue = 0) {
+  const count = ref(initialValue);
+  const doubled = computed(() => count.value * 2);
+
+  function increment() {
+    count.value++;
+  }
+
+  function decrement() {
+    count.value--;
+  }
+
+  return {
+    count,
+    doubled,
+    increment,
+    decrement,
+  };
+}
+```
+
+### Pinia Store Pattern
+```typescript
+// stores/useUserStore.ts
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+
+export const useUserStore = defineStore('user', () => {
+  // State
+  const user = ref<User | null>(null);
+  const isLoading = ref(false);
+
+  // Getters
+  const isAuthenticated = computed(() => !!user.value);
+  const userName = computed(() => user.value?.name ?? '');
+
+  // Actions
+  async function fetchUser(id: string) {
+    isLoading.value = true;
+    try {
+      user.value = await api.getUser(id);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  function logout() {
+    user.value = null;
+  }
+
+  return {
+    user,
+    isLoading,
+    isAuthenticated,
+    userName,
+    fetchUser,
+    logout,
+  };
+});
+```
+
+## Best Practices
+
+### 1. Composition API
+- Always use `<script setup>` syntax
+- Use composables for reusable logic
+- Keep components focused
+
+### 2. State Management
+- Use Pinia for global state
+- Keep component state local when possible
+- Use provide/inject for deep prop passing
+
+### 3. Performance
+- Use `v-memo` for expensive lists
+- Lazy load routes
+- Use `shallowRef` for large objects
+
+### 4. TypeScript
+- Define prop types with interfaces
+- Use typed emits
+- Avoid `any` types
+
+## Context7 Usage
+
+Before implementing Vue features:
+```
+use context7 to get Vue 3 Composition API documentation
+use context7 to get Pinia documentation
+```
+
+## Skills to Install
+- vue-patterns
+- pinia-patterns
+- vue-router-patterns
+- testing-vue

@@ -1,0 +1,50 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "docker exec simplemem-mcp memory-auto-capture --type=code_change --file=${FILE_PATH} --tool=${TOOL}",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "docker exec simplemem-mcp memory-auto-capture --type=command --cmd=${COMMAND}",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "docker exec simplemem-mcp memory-auto-capture --type=notification",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "docker exec simplemem-mcp memory-conolidate-auto --project={{PROJECT_NAME}}",
+            "timeout": 30000
+          }
+        ]
+      }
+    ]
+  }
+}

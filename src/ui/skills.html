@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skills - Agent Team Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="/ui/css/styles.css">
+    <style>
+        .skill-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .skill-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+        .skill-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .skill-category {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+        .skill-description {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 0.75rem;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        .filter-bar .input {
+            max-width: 250px;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .view-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            background: var(--bg-card);
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .view-btn:hover {
+            border-color: var(--primary);
+        }
+        .view-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+        }
+        .skill-detail {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+        .skill-detail pre {
+            background: var(--bg);
+            padding: 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+        }
+        .skill-content {
+            margin-top: 1rem;
+            line-height: 1.6;
+        }
+        .skill-content h1, .skill-content h2, .skill-content h3 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        .back-btn:hover {
+            color: var(--primary);
+        }
+        .used-by {
+            background: var(--bg);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .used-by strong {
+            color: var(--text);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" x-data="skillsApp()">
+        <!-- Header -->
+        <header class="header">
+            <h1>Skills</h1>
+            <p class="subtitle">Skills being used in your project</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <a href="/ui/" class="nav-link">Dashboard</a>
+            <a href="/ui/agents.html" class="nav-link">Agents</a>
+            <a href="/ui/skills.html" class="nav-link active">Skills</a>
+            <a href="/ui/roles.html" class="nav-link">Roles</a>
+        </nav>
+
+        <!-- Skill List View -->
+        <div x-show="!selectedSkill">
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <input type="text" class="input" placeholder="Search..."
+                       x-model="searchQuery" @input="filterSkills()">
+
+                <div class="view-toggle">
+                    <button class="view-btn" :class="{ active: viewMode === 'used' }"
+                            @click="viewMode = 'used'; filterSkills()">
+                        In Use (<span x-text="usedSkills.length"></span>)
+                    </button>
+                    <button class="view-btn" :class="{ active: viewMode === 'all' }"
+                            @click="viewMode = 'all'; filterSkills()">
+                        All Available (<span x-text="allSkills.length"></span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Skills Grid -->
+            <section class="section">
+                <!-- Used Skills View -->
+                <div x-show="viewMode === 'used'">
+                    <div x-show="usedSkills.length > 0" class="skills-grid">
+                        <template x-for="skill in filteredSkills" :key="skill.name">
+                            <div class="skill-card" @click="selectSkill(skill)">
+                                <span class="skill-category" x-text="skill.category || 'general'"></span>
+                                <div class="skill-name" x-text="skill.name"></div>
+                                <div class="skill-description" x-text="skill.description || 'No description'"></div>
+                                <div class="used-by" x-show="skill.usedBy?.length">
+                                    <strong>Used by:</strong> <span x-text="skill.usedBy.join(', ')"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div x-show="usedSkills.length === 0" class="empty-state">
+                        <h3>No skills in use yet</h3>
+                        <p>Add an agent to see their skills here</p>
+                        <a href="/ui/agents.html" class="btn btn-primary" style="margin-top: 1rem;">
+                            Add Agent
+                        </a>
+                    </div>
+                </div>
+
+                <!-- All Skills View -->
+                <div x-show="viewMode === 'all'" class="skills-grid">
+                    <template x-for="skill in filteredSkills" :key="skill.name">
+                        <div class="skill-card" @click="selectSkill(skill)">
+                            <span class="skill-category" x-text="skill.category || 'general'"></span>
+                            <div class="skill-name" x-text="skill.name"></div>
+                            <div class="skill-description" x-text="skill.description || 'No description'"></div>
+                        </div>
+                    </template>
+                </div>
+            </section>
+        </div>
+
+        <!-- Skill Detail View -->
+        <div x-show="selectedSkill" x-cloak>
+            <div class="back-btn" @click="selectedSkill = null">
+                ← Back to skills
+            </div>
+
+            <div class="skill-detail">
+                <span class="skill-category" x-text="selectedSkill?.category || 'general'"></span>
+                <h2 x-text="selectedSkill?.name" style="margin-top: 0.5rem;"></h2>
+                <p class="skill-description" x-text="selectedSkill?.description"></p>
+
+                <div class="used-by" x-show="selectedSkill?.usedBy?.length" style="margin-top: 1rem;">
+                    <strong>Used by agents:</strong> <span x-text="selectedSkill?.usedBy?.join(', ')"></span>
+                </div>
+
+                <div class="skill-content" id="skill-content">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function skillsApp() {
+            return {
+                allSkills: [],
+                usedSkills: [],
+                filteredSkills: [],
+                viewMode: 'used',
+                searchQuery: '',
+                selectedSkill: null,
+
+                async init() {
+                    await Promise.all([
+                        this.loadAllSkills(),
+                        this.loadUsedSkills()
+                    ]);
+                    this.filterSkills();
+                },
+
+                async loadAllSkills() {
+                    try {
+                        const response = await fetch('/api/skills');
+                        this.allSkills = await response.json();
+                    } catch (error) {
+                        console.error('Failed to load skills:', error);
+                    }
+                },
+
+                async loadUsedSkills() {
+                    try {
+                        // Get agents first
+                        const agentsRes = await fetch('/api/agents');
+                        const agentsData = await agentsRes.json();
+
+                        if (!agentsData.agents || agentsData.agents.length === 0) {
+                            this.usedSkills = [];
+                            return;
+                        }
+
+                        // Collect all skills used by agents
+                        const skillUsage = {};
+
+                        for (const agent of agentsData.agents) {
+                            const agentDir = agent.path || `.claude/agents/${agent.name}`;
+                            const skillsDir = `${agentDir}/skills`;
+
+                            // Get skills from agent's variants.json or scan directory
+                            if (agent.skills) {
+                                for (const skillName of agent.skills) {
+                                    if (!skillUsage[skillName]) {
+                                        skillUsage[skillName] = [];
+                                    }
+                                    skillUsage[skillName].push(agent.name);
+                                }
+                            }
+                        }
+
+                        // Get skill details for used skills
+                        const usedSkillNames = Object.keys(skillUsage);
+                        this.usedSkills = this.allSkills
+                            .filter(s => usedSkillNames.includes(s.name))
+                            .map(s => ({
+                                ...s,
+                                usedBy: skillUsage[s.name] || []
+                            }));
+
+                    } catch (error) {
+                        console.error('Failed to load used skills:', error);
+                        this.usedSkills = [];
+                    }
+                },
+
+                filterSkills() {
+                    const source = this.viewMode === 'used' ? this.usedSkills : this.allSkills;
+
+                    if (!this.searchQuery) {
+                        this.filteredSkills = source;
+                    } else {
+                        const query = this.searchQuery.toLowerCase();
+                        this.filteredSkills = source.filter(skill =>
+                            skill.name.toLowerCase().includes(query) ||
+                            (skill.description || '').toLowerCase().includes(query)
+                        );
+                    }
+                },
+
+                async selectSkill(skill) {
+                    this.selectedSkill = skill;
+
+                    try {
+                        const response = await fetch(`/api/skills/${skill.name}/content`);
+                        const content = await response.text();
+                        document.getElementById('skill-content').innerHTML = content;
+                    } catch (error) {
+                        document.getElementById('skill-content').innerHTML =
+                            '<p style="color: var(--text-muted);">Failed to load skill content</p>';
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

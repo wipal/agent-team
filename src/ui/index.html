@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Team Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="/ui/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🤖 Agent Team Dashboard</h1>
+            <p class="subtitle">Manage AI agents for your project</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <a href="/ui/" class="nav-link active">Dashboard</a>
+            <a href="/ui/agents.html" class="nav-link">Agents</a>
+            <a href="/ui/skills.html" class="nav-link">Skills</a>
+            <a href="/ui/roles.html" class="nav-link">Roles</a>
+        </nav>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" hx-get="/api/agents" hx-trigger="load" hx-swap="innerHTML">
+            <!-- Loaded via HTMX -->
+            <div class="loading">Loading...</div>
+        </div>
+
+        <!-- Quick Actions -->
+        <section class="section">
+            <h2>Quick Actions</h2>
+            <div class="actions-grid">
+                <button class="btn btn-primary" onclick="location.href='/ui/agents.html?action=add'">
+                    ➕ Add Agent
+                </button>
+                <button class="btn btn-secondary" onclick="location.href='/ui/skills.html'">
+                    📚 Browse Skills
+                </button>
+                <button class="btn btn-secondary" onclick="location.href='/ui/roles.html'">
+                    ⚙️ Configure Roles
+                </button>
+            </div>
+        </section>
+
+        <!-- Recent Agents -->
+        <section class="section">
+            <h2>Your Agents</h2>
+            <div id="agents-list" hx-get="/api/agents" hx-trigger="load">
+                <div class="loading">Loading agents...</div>
+            </div>
+        </section>
+
+        <!-- Available Roles -->
+        <section class="section">
+            <h2>Available Roles</h2>
+            <div id="roles-list" hx-get="/api/agents/meta/roles" hx-trigger="load">
+                <div class="loading">Loading roles...</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Transform stats response
+        document.body.addEventListener('htmx:beforeSwap', function(evt) {
+            if (evt.detail.pathInfo.requestPath === '/api/agents') {
+                // First load - render as stats
+                if (evt.detail.target.matches('.stats-grid')) {
+                    try {
+                        const agents = JSON.parse(evt.detail.xhr.response);
+                        const statsHtml = renderStats(agents);
+                        evt.detail.swap = 'innerHTML';
+                        evt.detail.xhr.response = statsHtml;
+                    } catch (e) {}
+                }
+            }
+        });
+
+        function renderStats(agents) {
+            const total = agents.length;
+            const roles = [...new Set(agents.map(a => a.variants?.base_role).filter(Boolean))];
+
+            return `
+                <div class="stat-card">
+                    <div class="stat-value">${total}</div>
+                    <div class="stat-label">Total Agents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${roles.length}</div>
+                    <div class="stat-label">Roles Used</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">37</div>
+                    <div class="stat-label">Skills Available</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">7</div>
+                    <div class="stat-label">Roles Available</div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

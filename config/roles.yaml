@@ -1,0 +1,237 @@
+# Role Definitions for Agent Team
+# Each role defines which skills are included
+
+# Tool Profiles - Pattern từ OpenFang
+# Predefined tool sets for different role types
+tool_profiles:
+  minimal:
+    description: Basic file operations only
+    tools:
+      - read
+      - write
+      - edit
+    mcp_servers: []
+
+  coding:
+    description: Full coding capabilities
+    tools:
+      - read
+      - write
+      - edit
+      - bash
+      - grep
+      - glob
+    mcp_servers:
+      - filesystem
+      - github
+
+  research:
+    description: Research and documentation
+    tools:
+      - read
+      - web_search
+      - web_fetch
+    mcp_servers:
+      - context7
+      - docs-seeker
+
+  full:
+    description: All tools and MCP servers
+    tools: all
+    mcp_servers: all
+
+  orchestration:
+    description: Tech lead and coordination
+    tools:
+      - read
+      - write
+      - edit
+      - bash
+      - grep
+      - glob
+      - task
+    mcp_servers:
+      - filesystem
+      - github
+      - context7
+
+roles:
+  # Frontend Developer
+  dev-fe:
+    name: Frontend Developer
+    description: React/Vue/Angular development, UI/UX implementation
+    template: templates/roles/dev-fe.md
+    tool_profile: coding
+    skills:
+      inherit: []
+      include:
+        - category: frontend
+        - category: core
+      exclude: []
+
+  # Backend Developer
+  dev-be:
+    name: Backend Developer
+    description: API design, database, server-side logic
+    template: templates/roles/dev-be.md
+    tool_profile: coding
+    skills:
+      inherit: []
+      include:
+        - category: backend
+        - category: core
+      exclude: []
+
+  # Solution Architect
+  sa:
+    name: Solution Architect
+    description: System design, architecture decisions, tech selection
+    template: templates/roles/sa.md
+    tool_profile: full
+    skills:
+      inherit: []
+      include:
+        - category: architecture
+        - category: core
+      optional:
+        - category: frontend
+        - category: backend
+        - category: devops
+      exclude: []
+
+  # Tech Lead
+  tech-lead:
+    name: Tech Lead
+    description: Technical leadership, code review, mentoring
+    template: templates/roles/tech-lead.md
+    tool_profile: orchestration
+    skills:
+      inherit:
+        - dev-fe
+        - dev-be
+      include:
+        - category: leadership
+      exclude: []
+
+  # DevOps Engineer
+  devops:
+    name: DevOps Engineer
+    description: CI/CD, infrastructure, deployment, monitoring
+    template: templates/roles/devops.md
+    tool_profile: coding
+    skills:
+      inherit: []
+      include:
+        - category: devops
+        - category: core
+      exclude: []
+
+  # Product Manager
+  pm:
+    name: Product Manager
+    description: Requirements, user stories, sprint planning
+    template: templates/roles/pm.md
+    tool_profile: research
+    skills:
+      inherit: []
+      include:
+        - category: product
+        - category: core
+      optional:
+        - category: architecture
+      exclude: []
+
+  # Business Analyst
+  ba:
+    name: Business Analyst
+    description: Requirements analysis, PRD creation, stakeholder communication
+    template: templates/roles/ba.md
+    tool_profile: research
+    skills:
+      inherit: []
+      include:
+        - category: product
+        - category: core
+      optional:
+        - category: architecture
+      exclude: []
+
+  # QA Engineer
+  qa:
+    name: QA Engineer
+    description: Testing, quality assurance, automation
+    template: templates/roles/qa.md
+    tool_profile: coding
+    skills:
+      inherit: []
+      include:
+        - category: quality
+        - category: core
+      exclude: []
+
+  # UI/UX Designer
+  designer:
+    name: UI/UX Designer
+    description: User interface design, component systems, design tokens, HTML/CSS output
+    template: templates/roles/designer.md
+    tool_profile: minimal
+    variants:
+      - web
+      - mobile
+    skills:
+      inherit: []
+      include:
+        - category: design
+        - category: core
+      exclude: []
+
+# Category to skill folder mapping
+# Used when scanning skills
+categories:
+  core:
+    description: Universal skills for all agents
+    folder: core
+
+  frontend:
+    description: Frontend development skills
+    folder: domain/frontend
+
+  backend:
+    description: Backend development skills
+    folder: domain/backend
+
+  architecture:
+    description: Architecture and system design skills
+    folder: domain/architecture
+
+  devops:
+    description: DevOps and infrastructure skills
+    folder: domain/devops
+
+  product:
+    description: Product management skills
+    folder: domain/product
+
+  quality:
+    description: QA and testing skills
+    folder: domain/quality
+
+  design:
+    description: UI/UX design skills
+    folder: domain/design
+
+  leadership:
+    description: Tech lead and management skills
+    folder: leadership
+
+  community:
+    description: Community contributed skills
+    folder: community
+
+# Core skills - always included
+core_skills:
+  - code-review
+  - git-automation
+  - retrospect-work
+  - agent-creation
+  - sequential-thinking

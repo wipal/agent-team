@@ -1,0 +1,31 @@
+# React Full Stack Preset
+# Complete React setup with everything needed
+
+name: react-full-stack
+description: "Full React stack with everything"
+author: agent-team-template
+
+variants:
+  framework: react
+  styling: tailwind
+  state: zustand
+  data: tanstack-query
+  testing: vitest
+  form: react-hook-form
+  ui-lib: shadcn
+
+model:
+  default: claude-sonnet-4
+
+skills:
+  - frontend-design
+  - react-best-practices
+  - tailwind-patterns
+  - zustand-patterns
+  - tanstack-query
+  - vitest-testing
+  - form-validation
+
+mcp:
+  - context7
+  - github

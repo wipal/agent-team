@@ -1,0 +1,281 @@
+# Variant: Svelte/SvelteKit - Frontend Developer
+
+## Tech Stack
+- **Framework:** SvelteKit (Svelte 5+)
+- **Build Tool:** Vite
+- **Language:** TypeScript
+- **Styling:** TailwindCSS (default)
+- **State:** Svelte stores / Runes (Svelte 5)
+- **Forms:** Superforms + Zod
+- **Testing:** Vitest + Playwright
+
+## Project Structure
+```
+src/
+├── routes/                    # SvelteKit file-based routing
+│   ├── +layout.svelte        # Root layout
+│   ├── +layout.server.ts     # Root layout server data
+│   ├── +page.svelte          # Home page
+│   ├── (auth)/               # Route group
+│   │   ├── login/
+│   │   │   └── +page.svelte
+│   │   └── +layout.svelte    # Auth layout
+│   └── api/                  # API routes
+│       └── users/
+│           └── +server.ts
+├── lib/                       # Shared code
+│   ├── components/            # UI components
+│   │   ├── ui/               # Base UI components
+│   │   └── features/         # Feature components
+│   ├── stores/               # Svelte stores
+│   ├── utils/                # Utility functions
+│   ├── types/                # TypeScript types
+│   └── server/               # Server utilities
+├── params/                    # Custom param matchers
+└── app.html                   # HTML template
+```
+
+## Component Pattern
+```svelte
+<!-- src/lib/components/ui/Button.svelte -->
+<script lang="ts">
+    import type { Snippet } from 'svelte';
+    import type { HTMLButtonAttributes } from 'svelte/elements';
+
+    interface Props extends HTMLButtonAttributes {
+        variant?: 'primary' | 'secondary' | 'ghost';
+        size?: 'sm' | 'md' | 'lg';
+        children: Snippet;
+    }
+
+    let {
+        variant = 'primary',
+        size = 'md',
+        children,
+        class: className = '',
+        ...props
+    }: Props = $props();
+
+    const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium';
+    const variantClasses = {
+        primary: 'bg-blue-600 text-white hover:bg-blue-700',
+        secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300',
+        ghost: 'bg-transparent hover:bg-gray-100'
+    };
+    const sizeClasses = {
+        sm: 'h-8 px-3 text-sm',
+        md: 'h-10 px-4 text-base',
+        lg: 'h-12 px-6 text-lg'
+    };
+
+    const classes = $derived(
+        `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`
+    );
+</script>
+
+<button class={classes} {...props}>
+    {@render children()}
+</button>
+```
+
+## Page Pattern
+```svelte
+<!-- src/routes/users/+page.svelte -->
+<script lang="ts">
+    import type { PageData } from './$types';
+
+    interface Props {
+        data: PageData;
+    }
+
+    let { data }: Props = $props();
+
+    // Reactive state with runes
+    let searchTerm = $state('');
+    let filteredUsers = $derived(
+        data.users.filter(u =>
+            u.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    );
+</script>
+
+<svelte:head>
+    <title>Users - {data.appName}</title>
+</svelte:head>
+
+<div class="container mx-auto p-4">
+    <h1>Users</h1>
+
+    <input
+        type="search"
+        bind:value={searchTerm}
+        placeholder="Search users..."
+    />
+
+    <ul>
+        {#each filteredUsers as user (user.id)}
+            <li>{user.name} - {user.email}</li>
+        {:empty}
+            <li>No users found</li>
+        {/each}
+    </ul>
+</div>
+```
+
+## Server Load Pattern
+```typescript
+// src/routes/users/+page.server.ts
+import type { PageServerLoad } from './$types';
+import { error } from '@sveltejs/kit';
+
+export const load: PageServerLoad = async ({ fetch, params, parent }) => {
+    const parentData = await parent();
+
+    const response = await fetch('/api/users');
+
+    if (!response.ok) {
+        throw error(response.status, 'Failed to load users');
+    }
+
+    return {
+        users: await response.json(),
+        appName: parentData.appName
+    };
+};
+```
+
+## Form Action Pattern
+```typescript
+// src/routes/users/+page.server.ts
+import type { Actions } from './$types';
+import { fail, redirect } from '@sveltejs/kit';
+import { z } from 'zod';
+import { superValidate } from 'sveltekit-superforms';
+
+const schema = z.object({
+    name: z.string().min(2).max(100),
+    email: z.string().email()
+});
+
+export const actions: Actions = {
+    create: async ({ request, fetch }) => {
+        const form = await superValidate(request, schema);
+
+        if (!form.valid) {
+            return fail(400, { form });
+        }
+
+        const response = await fetch('/api/users', {
+            method: 'POST',
+            body: JSON.stringify(form.data)
+        });
+
+        if (!response.ok) {
+            return fail(500, { form, message: 'Failed to create user' });
+        }
+
+        throw redirect(303, '/users');
+    }
+};
+```
+
+## Store Pattern
+```typescript
+// src/lib/stores/user.ts
+import { writable, derived } from 'svelte/store';
+import type { User } from '$lib/types';
+
+function createUserStore() {
+    const { subscribe, set, update } = writable<User | null>(null);
+
+    return {
+        subscribe,
+        login: (user: User) => set(user),
+        logout: () => set(null),
+        updateProfile: (data: Partial<User>) =>
+            update(user => user ? { ...user, ...data } : null)
+    };
+}
+
+export const user = createUserStore();
+
+// Derived store
+export const isAuthenticated = derived(
+    user,
+    $user => $user !== null
+);
+```
+
+## API Route Pattern
+```typescript
+// src/routes/api/users/+server.ts
+import type { RequestHandler } from './$types';
+import { json, error } from '@sveltejs/kit';
+
+export const GET: RequestHandler = async ({ url, locals }) => {
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    // Use locals for authenticated user
+    if (!locals.user) {
+        throw error(401, 'Unauthorized');
+    }
+
+    const users = await locals.prisma.user.findMany({
+        skip: (page - 1) * limit,
+        take: limit
+    });
+
+    return json({ data: users, page, limit });
+};
+
+export const POST: RequestHandler = async ({ request, locals }) => {
+    const body = await request.json();
+
+    const user = await locals.prisma.user.create({
+        data: body
+    });
+
+    return json(user, { status: 201 });
+};
+```
+
+## Key Conventions
+
+### Naming
+- Components: `PascalCase.svelte`
+- Routes: `kebab-case/`
+- Stores: `camelCase.ts`
+- Types: `PascalCase`
+
+### Runes (Svelte 5)
+```svelte
+<script lang="ts">
+    // State
+    let count = $state(0);
+
+    // Derived
+    let doubled = $derived(count * 2);
+
+    // Effect
+    $effect(() => {
+        console.log(`Count changed to ${count}`);
+    });
+
+    // Props
+    interface Props { value: number; }
+    let { value }: Props = $props();
+</script>
+```
+
+### Server vs Client
+- `+page.server.ts` - Runs on server only
+- `+page.ts` - Runs on both server and client
+- `+page.svelte` - Component, runs on client
+
+## Skills Reference
+- `domain/frontend/frontend-design` - Component patterns
+- `domain/frontend/accessibility` - WCAG compliance
+- `domain/frontend/state-management` - Svelte stores/runes
+- `domain/frontend/testing-fe` - Vitest + Playwright
+- `domain/frontend/performance-fe` - Svelte optimization

@@ -1,0 +1,217 @@
+# Angular Variant Additions
+
+## Additional Tech Stack
+- Framework: Angular 17+
+- Language: TypeScript
+- State: NgRx / Signals
+- Styling: SCSS / TailwindCSS
+- Testing: Jasmine / Jest
+
+## Angular-Specific Patterns
+
+### Project Structure
+```
+src/
+├── app/
+│   ├── core/               # Core module (singleton services)
+│   │   ├── services/
+│   │   ├── guards/
+│   │   ├── interceptors/
+│   │   └── core.module.ts
+│   ├── features/           # Feature modules
+│   │   └── feature-name/
+│   │       ├── components/
+│   │       ├── services/
+│   │       ├── models/
+│   │       └── feature-name.module.ts
+│   ├── shared/             # Shared module
+│   │   ├── components/
+│   │   ├── directives/
+│   │   ├── pipes/
+│   │   └── shared.module.ts
+│   └── app.module.ts
+├── assets/
+├── environments/
+│   ├── environment.ts
+│   └── environment.prod.ts
+└── styles/
+```
+
+### Component Template (Standalone)
+```typescript
+// feature-name.component.ts
+import { Component, input, output, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FeatureNameService } from './feature-name.service';
+
+@Component({
+  selector: 'app-feature-name',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="feature-name">
+      <h2>{{ title() }}</h2>
+      <button (click)="onAction.emit()">Action</button>
+    </div>
+  `,
+  styles: [`
+    .feature-name {
+      padding: 1rem;
+    }
+  `]
+})
+export class FeatureNameComponent {
+  // Inputs (signals)
+  title = input.required<string>();
+  disabled = input<boolean>(false);
+
+  // Outputs
+  onAction = output<void>();
+
+  // Computed values
+  buttonText = computed(() =>
+    this.disabled() ? 'Disabled' : 'Click Me'
+  );
+
+  constructor(private service: FeatureNameService) {}
+}
+```
+
+### Service Template
+```typescript
+// feature-name.service.ts
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+export interface FeatureItem {
+  id: string;
+  name: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FeatureNameService {
+  private http = inject(HttpClient);
+  private apiUrl = '/api/features';
+
+  getAll(): Observable<FeatureItem[]> {
+    return this.http.get<FeatureItem[]>(this.apiUrl);
+  }
+
+  getById(id: string): Observable<FeatureItem> {
+    return this.http.get<FeatureItem>(`${this.apiUrl}/${id}`);
+  }
+
+  create(item: Partial<FeatureItem>): Observable<FeatureItem> {
+    return this.http.post<FeatureItem>(this.apiUrl, item);
+  }
+}
+```
+
+### Signal Store (State Management)
+```typescript
+// feature-name.store.ts
+import { signal, computed } from '@angular/core';
+import { FeatureItem } from './feature-name.service';
+
+export class FeatureNameStore {
+  // State
+  private items = signal<FeatureItem[]>([]);
+  private loading = signal(false);
+  private error = signal<string | null>(null);
+
+  // Computed
+  itemCount = computed(() => this.items().length);
+  hasError = computed(() => this.error() !== null);
+
+  // Actions
+  setItems(items: FeatureItem[]) {
+    this.items.set(items);
+  }
+
+  setLoading(loading: boolean) {
+    this.loading.set(loading);
+  }
+
+  setError(error: string | null) {
+    this.error.set(error);
+  }
+
+  addItem(item: FeatureItem) {
+    this.items.update(items => [...items, item]);
+  }
+}
+```
+
+### HTTP Interceptor
+```typescript
+// auth.interceptor.ts
+import { Injectable } from '@angular/core';
+import {
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpInterceptor
+} from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+  intercept(
+    request: HttpRequest<unknown>,
+    next: HttpHandler
+  ): Observable<HttpEvent<unknown>> {
+    const token = localStorage.getItem('accessToken');
+
+    if (token) {
+      request = request.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    }
+
+    return next.handle(request);
+  }
+}
+```
+
+## Best Practices
+
+### 1. Component Design
+- Use standalone components (Angular 17+)
+- Use signals for reactive state
+- Keep components small and focused
+- Use OnPush change detection
+
+### 2. State Management
+- Use signals for local state
+- Use NgRx for complex global state
+- Avoid direct property binding for performance
+
+### 3. Performance
+- Use lazy loading for feature modules
+- Implement OnPush strategy
+- Use trackBy in ngFor
+- Avoid inline styles in templates
+
+### 4. Testing
+- Write unit tests for services
+- Write component tests for UI
+- Use TestBed for integration tests
+
+## Context7 Usage
+
+Before implementing Angular features:
+```
+use context7 to get Angular documentation
+use context7 to get NgRx documentation
+```
+
+## Skills to Install
+- angular-patterns
+- ngrx-state-management
+- testing-angular
+- frontend-design

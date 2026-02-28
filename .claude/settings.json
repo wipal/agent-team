@@ -1,0 +1,40 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"],
+      "description": "Documentation lookup (REQUIRED for coding tasks)"
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "description": "GitHub operations (repos, PRs, issues)"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "description": "Extended thinking for complex problems"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/dir"],
+      "description": "File system operations"
+    },
+    "drawio": {
+      "command": "npx",
+      "args": ["-y", "@drawio/mcp"],
+      "description": "Create diagrams and mockups via Draw.io"
+    }
+  },
+  "disabledMcpServers": [],
+  "settings": {
+    "defaultModel": "claude-sonnet-4",
+    "thinkingModel": "claude-opus-4",
+    "maxThinkingTokens": 10000,
+    "compactThresholdPct": 50,
+    "subagentModel": "claude-3-5-haiku"
+  }
+}

@@ -1,0 +1,201 @@
+# Code Review
+
+## Metadata
+
+| Field | Value |
+| ----- | ----- |
+| **PR Number** | #{{PR_NUMBER}} |
+| **Title** | {{TITLE}} |
+| **Author** | {{AUTHOR}} |
+| **Reviewer** | {{REVIEWER}} |
+| **Date** | {{DATE}} |
+| **Branch** | {{BRANCH}} |
+| **Status** | {{STATUS}} (Pending / Approved / Changes Requested) |
+
+---
+
+## Summary
+
+{{SUMMARY}}
+
+---
+
+## Files Reviewed
+
+| File | Lines Changed | Risk Level | Notes |
+| ---- | ------------- | ---------- | ----- |
+| `{{FILE_1}}` | +{{ADDED_1}} / -{{REMOVED_1}} | {{RISK_1}} | {{NOTES_1}} |
+| `{{FILE_2}}` | +{{ADDED_2}} / -{{REMOVED_2}} | {{RISK_2}} | {{NOTES_2}} |
+
+**Total Changes**: +{{TOTAL_ADDED}} / -{{TOTAL_REMOVED}} lines
+
+---
+
+## Review Categories
+
+### 🔴 Critical Issues (Must Fix)
+
+Issues that could cause bugs, security vulnerabilities, or break functionality.
+
+1. **[{{FILE}}:{{LINE}}] {{ISSUE_TITLE}}**
+   - **Issue**: {{ISSUE_DESCRIPTION}}
+   - **Suggestion**: {{SUGGESTION}}
+   ```{{LANGUAGE}}
+   // Current
+   {{CURRENT_CODE}}
+
+   // Suggested
+   {{SUGGESTED_CODE}}
+   ```
+
+### 🟡 Suggestions (Should Fix)
+
+Recommendations for improvement that aren't critical.
+
+1. **[{{FILE}}:{{LINE}}] {{ISSUE_TITLE}}**
+   - **Current**: {{CURRENT}}
+   - **Suggestion**: {{SUGGESTION}}
+
+### 🟢 Nitpicks (Optional)
+
+Minor style or preference suggestions.
+
+1. **[{{FILE}}:{{LINE}}]** {{NITPICK}}
+
+### ✅ Good Practices
+
+Highlight good patterns worth keeping.
+
+1. **[{{FILE}}:{{LINE}}]** {{GOOD_PRACTICE}}
+
+---
+
+## Checklist
+
+### Code Quality
+
+- [ ] Code is readable and well-organized
+- [ ] Functions/methods are not too long
+- [ ] Naming is clear and consistent
+- [ ] No code duplication (DRY)
+- [ ] Comments explain "why", not "what"
+
+### Testing
+
+- [ ] Unit tests added/updated
+- [ ] Tests cover edge cases
+- [ ] Tests are meaningful (not just for coverage)
+- [ ] Mocks are appropriate
+
+### Performance
+
+- [ ] No N+1 queries
+- [ ] No unnecessary re-renders (frontend)
+- [ ] No memory leaks
+- [ ] Appropriate data structures used
+
+### Security
+
+- [ ] No hardcoded credentials
+- [ ] Input validation present
+- [ ] Output encoding/sanitization
+- [ ] No SQL injection vulnerabilities
+- [ ] Proper authentication/authorization
+
+### Best Practices
+
+- [ ] Follows project conventions
+- [ ] Error handling is appropriate
+- [ ] Logging is sufficient
+- [ ] Documentation updated (if needed)
+
+---
+
+## Architecture & Design
+
+### Concerns
+
+{{ARCHITECTURE_CONCERNS}}
+
+### Suggestions
+
+{{ARCHITECTURE_SUGGESTIONS}}
+
+---
+
+## Testing Notes
+
+### Test Coverage
+
+| Type | Coverage | Notes |
+| ---- | -------- | ----- |
+| Unit | {{UNIT_COVERAGE}}% | {{UNIT_NOTES}} |
+| Integration | {{INTEGRATION_COVERAGE}}% | {{INTEGRATION_NOTES}} |
+
+### Test Quality
+
+{{TEST_QUALITY_NOTES}}
+
+---
+
+## Security Review
+
+### Findings
+
+| Severity | Finding | Recommendation |
+| -------- | ------- | -------------- |
+| {{SEVERITY}} | {{FINDING}} | {{RECOMMENDATION}} |
+
+### Security Checklist
+
+- [ ] No sensitive data in logs
+- [ ] No exposed internal details in errors
+- [ ] Proper access controls
+- [ ] Dependencies checked for vulnerabilities
+
+---
+
+## Performance Review
+
+### Concerns
+
+{{PERFORMANCE_CONCERNS}}
+
+### Benchmarks
+
+| Metric | Before | After | Change |
+| ------ | ------ | ----- | ------ |
+| {{METRIC_1}} | {{BEFORE_1}} | {{AFTER_1}} | {{CHANGE_1}} |
+
+---
+
+## Final Verdict
+
+### Decision
+
+{{DECISION}}
+
+- [ ] ✅ Approved - Ready to merge
+- [ ] ⚠️ Approved with comments - Minor fixes recommended
+- [ ] 🔄 Changes Requested - Please address feedback
+- [ ] ❌ Rejected - Major issues need resolution
+
+### Comments
+
+{{FINAL_COMMENTS}}
+
+---
+
+## Follow-up Actions
+
+- [ ] {{ACTION_1}}
+- [ ] {{ACTION_2}}
+
+---
+
+## Sign-off
+
+| Reviewer | Date | Decision |
+| -------- | ---- | -------- |
+| {{REVIEWER_1}} | {{DATE_1}} | {{DECISION_1}} |
+| {{REVIEWER_2}} | {{DATE_2}} | {{DECISION_2}} |

@@ -1,0 +1,63 @@
+import { IsString, IsOptional, IsNumber, IsBoolean, IsDate, IsEmail, IsUrl, Min, Max, MinLength, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional, PartialType, OmitType } from '@nestjs/swagger';
+
+/**
+ * DTO for creating a new {{ResourceName}}
+ */
+export class Create{{ResourceName}}Dto {
+  @ApiProperty({ description: 'Name of the {{resourceName}}' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  name: string;
+
+  @ApiPropertyOptional({ description: 'Description' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  description?: string;
+
+  // TODO: Add additional fields as needed
+}
+
+/**
+ * DTO for updating an existing {{ResourceName}}
+ */
+export class Update{{ResourceName}}Dto extends PartialType(
+  OmitType(Create{{ResourceName}}Dto, ['name'] as const),
+) {
+  @ApiPropertyOptional({ description: 'Name of the {{resourceName}}' })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  name?: string;
+}
+
+/**
+ * DTO for querying {{ResourceName}} list
+ */
+export class Query{{ResourceName}}Dto {
+  @ApiPropertyOptional({ default: 1, minimum: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  page?: number = 1;
+
+  @ApiPropertyOptional({ default: 10, minimum: 1, maximum: 100 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  limit?: number = 10;
+
+  @ApiPropertyOptional({ description: 'Search by name' })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  // TODO: Add additional query fields as needed
+}

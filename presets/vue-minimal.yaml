@@ -1,0 +1,23 @@
+# Vue Minimal Preset
+# Simple Vue setup for quick starts
+
+name: vue-minimal
+description: "Minimal Vue setup"
+author: agent-team-template
+
+variants:
+  framework: vue
+  styling: tailwind
+  testing: vitest
+
+model:
+  default: claude-sonnet-4
+
+skills:
+  - frontend-design
+  - vue-patterns
+  - vitest-testing
+
+mcp:
+  - context7
+  - github

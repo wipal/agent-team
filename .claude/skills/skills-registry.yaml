@@ -1,0 +1,536 @@
+# Skills Registry
+# Track all installed skills with metadata and security status
+#
+# This file is automatically updated when skills are installed via /install-skill
+# Manual edits should follow the schema below
+
+version: 1.0.0
+last_updated: 2025-02-27
+
+# ============================================
+# OFFICIAL SOURCES
+# Trusted sources that can be auto-approved (with logging)
+# ============================================
+official_sources:
+  - owner: anthropics
+    url: https://github.com/anthropics/skills
+    trust_level: full
+    auto_approve: true
+    description: Official Anthropic skills
+
+  - owner: vercel-labs
+    url: https://github.com/vercel-labs/agent-skills
+    trust_level: full
+    auto_approve: true
+    description: Vercel Labs agent skills
+
+  - owner: microsoft
+    url: https://github.com/microsoft/github-copilot-for-azure
+    trust_level: full
+    auto_approve: true
+    description: Microsoft Azure skills
+
+  - owner: expo
+    url: https://github.com/expo/skills
+    trust_level: full
+    auto_approve: true
+    description: Expo React Native skills
+
+  - owner: supabase
+    url: https://github.com/supabase/agent-skills
+    trust_level: full
+    auto_approve: true
+    description: Supabase skills
+
+  - owner: remotion-dev
+    url: https://github.com/remotion-dev/skills
+    trust_level: full
+    auto_approve: true
+    description: Remotion video skills
+
+# ============================================
+# COMMUNITY SOURCES
+# Require manual review before installation
+# ============================================
+community_sources:
+  - owner: mrgoonie
+    url: https://github.com/mrgoonie/claudekit-skills
+    trust_level: partial
+    requires_review: true
+    description: ClaudeKit community skills
+
+  - owner: VoltAgent
+    url: https://github.com/VoltAgent/awesome-agent-skills
+    trust_level: partial
+    requires_review: true
+    description: Curated list of agent skills
+
+  - owner: obra
+    url: https://github.com/obra/superpowers
+    trust_level: partial
+    requires_review: true
+    description: Superpowers debugging skills
+
+  - owner: antfu
+    url: https://github.com/antfu/skills
+    trust_level: partial
+    requires_review: true
+    description: Anthony Fu's Vue/Vite skills
+
+  - owner: wshobson
+    url: https://github.com/wshobson/agents
+    trust_level: partial
+    requires_review: true
+    description: Architecture and patterns skills
+
+  - owner: coreyhaines31
+    url: https://github.com/coreyhaines31/marketingskills
+    trust_level: partial
+    requires_review: true
+    description: Marketing skills collection
+
+# ============================================
+# INSTALLED SKILLS
+# Local and external skills with validation status
+# ============================================
+installed_skills:
+  # Core Skills (Local)
+  - name: code-review
+    source: local
+    category: core
+    path: .claude/skills/core/code-review
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: git-automation
+    source: local
+    category: core
+    path: .claude/skills/core/git-automation
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: retrospect-work
+    source: local
+    category: core
+    path: .claude/skills/core/retrospect-work
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: agent-creation
+    source: local
+    category: core
+    path: .claude/skills/core/agent-creation
+    installed_at: 2025-02-26
+    security_checked: true
+    security_status: pass
+    description: Guide for creating agents with skills.sh integration
+
+  # Domain Skills - Frontend
+  - name: frontend-design
+    source: local
+    category: domain/frontend
+    path: .claude/skills/domain/frontend/frontend-design
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: accessibility
+    source: local
+    category: domain/frontend
+    path: .claude/skills/domain/frontend/accessibility
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: state-management
+    source: local
+    category: domain/frontend
+    path: .claude/skills/domain/frontend/state-management
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: testing-fe
+    source: local
+    category: domain/frontend
+    path: .claude/skills/domain/frontend/testing-fe
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: performance-fe
+    source: local
+    category: domain/frontend
+    path: .claude/skills/domain/frontend/performance-fe
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  # Domain Skills - Backend
+  - name: api-design
+    source: local
+    category: domain/backend
+    path: .claude/skills/domain/backend/api-design
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: database-design
+    source: local
+    category: domain/backend
+    path: .claude/skills/domain/backend/database-design
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: security
+    source: local
+    category: domain/backend
+    path: .claude/skills/domain/backend/security
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: testing-be
+    source: local
+    category: domain/backend
+    path: .claude/skills/domain/backend/testing-be
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: performance-be
+    source: local
+    category: domain/backend
+    path: .claude/skills/domain/backend/performance-be
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  # Domain Skills - Architecture
+  - name: system-design
+    source: local
+    category: domain/architecture
+    path: .claude/skills/domain/architecture/system-design
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: architecture-patterns
+    source: local
+    category: domain/architecture
+    path: .claude/skills/domain/architecture/architecture-patterns
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: adr-writing
+    source: local
+    category: domain/architecture
+    path: .claude/skills/domain/architecture/adr-writing
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: tech-selection
+    source: local
+    category: domain/architecture
+    path: .claude/skills/domain/architecture/tech-selection
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: performance-engineering
+    source: local
+    category: domain/architecture
+    path: .claude/skills/domain/architecture/performance-engineering
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: security-architecture
+    source: local
+    category: domain/architecture
+    path: .claude/skills/domain/architecture/security-architecture
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  # Domain Skills - DevOps
+  - name: ci-cd
+    source: local
+    category: domain/devops
+    path: .claude/skills/domain/devops/ci-cd
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: containerization
+    source: local
+    category: domain/devops
+    path: .claude/skills/domain/devops/containerization
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: infrastructure-as-code
+    source: local
+    category: domain/devops
+    path: .claude/skills/domain/devops/infrastructure-as-code
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: monitoring
+    source: local
+    category: domain/devops
+    path: .claude/skills/domain/devops/monitoring
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: deployment
+    source: local
+    category: domain/devops
+    path: .claude/skills/domain/devops/deployment
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  # Domain Skills - Product
+  - name: requirements-gathering
+    source: local
+    category: domain/product
+    path: .claude/skills/domain/product/requirements-gathering
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: user-stories
+    source: local
+    category: domain/product
+    path: .claude/skills/domain/product/user-stories
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: sprint-planning
+    source: local
+    category: domain/product
+    path: .claude/skills/domain/product/sprint-planning
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: roadmap-planning
+    source: local
+    category: domain/product
+    path: .claude/skills/domain/product/roadmap-planning
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: stakeholder-communication
+    source: local
+    category: domain/product
+    path: .claude/skills/domain/product/stakeholder-communication
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  # Domain Skills - Quality
+  - name: test-planning
+    source: local
+    category: domain/quality
+    path: .claude/skills/domain/quality/test-planning
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: bug-reporting
+    source: local
+    category: domain/quality
+    path: .claude/skills/domain/quality/bug-reporting
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: test-automation
+    source: local
+    category: domain/quality
+    path: .claude/skills/domain/quality/test-automation
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: regression-testing
+    source: local
+    category: domain/quality
+    path: .claude/skills/domain/quality/regression-testing
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  # Leadership Skills
+  - name: code-review-advanced
+    source: local
+    category: leadership
+    path: .claude/skills/leadership/code-review-advanced
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: technical-decision
+    source: local
+    category: leadership
+    path: .claude/skills/leadership/technical-decision
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: mentoring
+    source: local
+    category: leadership
+    path: .claude/skills/leadership/mentoring
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  - name: technical-debt
+    source: local
+    category: leadership
+    path: .claude/skills/leadership/technical-debt
+    installed_at: 2025-02-01
+    security_checked: true
+    security_status: pass
+
+  # Community Skills
+  - name: security-validator
+    source: local
+    category: community
+    path: .claude/skills/community/security-validator
+    installed_at: 2025-02-26
+    security_checked: true
+    security_status: pass
+    description: Validate external skills for security issues
+
+  # New Skills Added 2025-02-27
+  - name: sequential-thinking
+    source: local
+    category: core
+    path: .claude/skills/core/sequential-thinking
+    installed_at: 2025-02-27
+    security_checked: true
+    security_status: pass
+    description: Systematic step-by-step reasoning for complex problems
+
+  - name: requirements-clarity
+    source: local
+    category: domain/product
+    path: .claude/skills/domain/product/requirements-clarity
+    installed_at: 2025-02-27
+    security_checked: true
+    security_status: pass
+    description: Transform vague requirements into actionable PRDs
+
+  - name: c4-architecture
+    source: local
+    category: domain/architecture
+    path: .claude/skills/domain/architecture/c4-architecture
+    installed_at: 2025-02-27
+    security_checked: true
+    security_status: pass
+    description: Generate C4 model architecture diagrams in Mermaid
+
+  - name: mermaid-diagrams
+    source: local
+    category: domain/architecture
+    path: .claude/skills/domain/architecture/mermaid-diagrams
+    installed_at: 2025-02-27
+    security_checked: true
+    security_status: pass
+    description: Comprehensive guide for creating Mermaid diagrams
+
+  - name: ui-ux-pro-max
+    source: github
+    category: domain/frontend
+    path: .claude/skills/domain/frontend/ui-ux-pro-max
+    installed_at: 2025-02-27
+    security_checked: true
+    security_status: pass
+    source_url: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+    description: UI/UX design intelligence with 67 styles, 96 palettes, 100 reasoning rules
+
+  # Domain Skills - Design
+  - name: ui-design
+    source: local
+    category: domain/design
+    path: .claude/skills/domain/design/ui-design
+    installed_at: 2025-02-27
+    security_checked: true
+    security_status: pass
+    description: UI design principles for creating professional, accessible interfaces
+
+  - name: design-system
+    source: local
+    category: domain/design
+    path: .claude/skills/domain/design/design-system
+    installed_at: 2025-02-27
+    security_checked: true
+    security_status: pass
+    description: Design system creation with tokens, components, and patterns
+
+  - name: responsive-design
+    source: local
+    category: domain/design
+    path: .claude/skills/domain/design/responsive-design
+    installed_at: 2025-02-27
+    security_checked: true
+    security_status: pass
+    description: Mobile-first responsive design with breakpoints and adaptive layouts
+
+  - name: html-css-output
+    source: local
+    category: domain/design
+    path: .claude/skills/domain/design/html-css-output
+    installed_at: 2025-02-27
+    security_checked: true
+    security_status: pass
+    description: Converting designs to semantic HTML and CSS properties for developers
+
+  - name: mockup-creation
+    source: local
+    category: domain/design
+    path: .claude/skills/domain/design/mockup-creation
+    installed_at: 2025-02-27
+    security_checked: true
+    security_status: pass
+    description: Creating wireframes and mockups using DrawIO MCP for BA and Designer workflows
+
+# ============================================
+# STATISTICS
+# ============================================
+statistics:
+  total_skills: 49
+  by_category:
+    core: 5
+    domain/frontend: 6
+    domain/backend: 5
+    domain/architecture: 8
+    domain/devops: 5
+    domain/product: 6
+    domain/quality: 4
+    domain/design: 5
+    leadership: 4
+    community: 1
+  by_source:
+    local: 48
+    github: 1
+    skills.sh: 0
+  security_status:
+    pass: 49
+    warning: 0
+    rejected: 0

@@ -1,0 +1,45 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+// import { {{EntityName}} } from './{{entity-name}}.entity';
+import { Create{{ResourceName}}Dto, Update{{ResourceName}}Dto, Query{{ResourceName}}Dto } from './dtos';
+
+@Injectable()
+export class {{ServiceName}}Service {
+  constructor(
+    // @InjectRepository({{EntityName}})
+    // private readonly repository: Repository<{{EntityName}}>,
+  ) {}
+
+  async findAll(query: Query{{ResourceName}}Dto) {
+    // TODO: Implement with pagination
+    return [];
+  }
+
+  async findOne(id: string) {
+    // const entity = await this.repository.findOne({ where: { id } });
+    // if (!entity) {
+    //   throw new NotFoundException(`{{ResourceName}} with id ${id} not found`);
+    // }
+    // return entity;
+    return null;
+  }
+
+  async create(createDto: Create{{ResourceName}}Dto) {
+    // const entity = this.repository.create(createDto);
+    // return this.repository.save(entity);
+    return null;
+  }
+
+  async update(id: string, updateDto: Update{{ResourceName}}Dto) {
+    // const entity = await this.findOne(id);
+    // Object.assign(entity, updateDto);
+    // return this.repository.save(entity);
+    return null;
+  }
+
+  async remove(id: string) {
+    // const entity = await this.findOne(id);
+    // await this.repository.remove(entity);
+  }
+}

@@ -1,0 +1,49 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+
+// Props
+interface Props {
+  // TODO: Define props
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  // TODO: Define defaults
+});
+
+// Emits
+const emit = defineEmits<{
+  // TODO: Define emits
+  // (e: 'update', value: string): void;
+}>();
+
+// State
+const isLoading = ref(false);
+
+// Computed
+const computedValue = computed(() => {
+  // TODO: Implement computed
+  return null;
+});
+
+// Methods
+function handleClick() {
+  // TODO: Implement
+}
+
+// Lifecycle
+onMounted(() => {
+  // TODO: Implement
+});
+</script>
+
+<template>
+  <div class="{{component-name}}">
+    <!-- TODO: Implement template -->
+  </div>
+</template>
+
+<style scoped>
+.{{component-name}} {
+  /* TODO: Add styles */
+}
+</style>

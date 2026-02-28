@@ -1,0 +1,54 @@
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+
+// Types
+interface Use{{ComposableName}}Options {
+  // TODO: Define options
+}
+
+interface Use{{ComposableName}}Return {
+  // TODO: Define return type
+  data: ReturnType<typeof ref<unknown>>;
+  isLoading: ReturnType<typeof ref<boolean>>;
+  error: ReturnType<typeof ref<Error | null>>;
+}
+
+/**
+ * use{{ComposableName}} - [Description]
+ *
+ * @param options - Configuration options
+ * @returns {Use{{ComposableName}}Return}
+ *
+ * @example
+ * const { data, isLoading, error } = use{{ComposableName}}();
+ */
+export function use{{ComposableName}}(
+  options: Use{{ComposableName}}Options = {}
+): Use{{ComposableName}}Return {
+  const data = ref<unknown>(null);
+  const isLoading = ref(false);
+  const error = ref<Error | null>(null);
+
+  const fetchData = async () => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      // TODO: Implement fetch logic
+    } catch (err) {
+      error.value = err instanceof Error ? err : new Error('Unknown error');
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  onMounted(() => {
+    fetchData();
+  });
+
+  return {
+    data,
+    isLoading,
+    error,
+  };
+}
+
+export default use{{ComposableName}};

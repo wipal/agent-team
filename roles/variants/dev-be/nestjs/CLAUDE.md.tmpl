@@ -1,0 +1,178 @@
+# NestJS Variant Additions
+
+## Additional Tech Stack
+- Framework: NestJS
+- Language: TypeScript
+- Database: PostgreSQL
+- ORM: Prisma (recommended) / TypeORM
+
+## NestJS-Specific Patterns
+
+### Module Structure
+```
+src/
+├── modules/
+│   └── module-name/
+│       ├── dto/
+│       │   ├── create-module.dto.ts
+│       │   ├── update-module.dto.ts
+│       │   └── index.ts
+│       ├── entities/
+│       │   └── module.entity.ts
+│       ├── repositories/
+│       │   └── module.repository.ts
+│       ├── services/
+│       │   └── module.service.ts
+│       ├── controllers/
+│       │   └── module.controller.ts
+│       ├── guards/
+│       ├── decorators/
+│       └── module.module.ts
+├── common/
+│   ├── decorators/
+│   ├── filters/
+│   ├── guards/
+│   ├── interceptors/
+│   └── pipes/
+└── config/
+```
+
+### Module Template
+```typescript
+// module.module.ts
+import { Module } from '@nestjs/common';
+import { ModuleController } from './controllers/module.controller';
+import { ModuleService } from './services/module.service';
+import { ModuleRepository } from './repositories/module.repository';
+
+@Module({
+  controllers: [ModuleController],
+  providers: [ModuleService, ModuleRepository],
+  exports: [ModuleService],
+})
+export class ModuleModule {}
+```
+
+### Controller Template
+```typescript
+// module.controller.ts
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { ModuleService } from '../services/module.service';
+import { CreateModuleDto } from '../dto/create-module.dto';
+
+@Controller('modules')
+export class ModuleController {
+  constructor(private readonly moduleService: ModuleService) {}
+
+  @Get()
+  findAll() {
+    return this.moduleService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.moduleService.findOne(id);
+  }
+
+  @Post()
+  create(@Body() createDto: CreateModuleDto) {
+    return this.moduleService.create(createDto);
+  }
+}
+```
+
+### Service Template
+```typescript
+// module.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { ModuleRepository } from '../repositories/module.repository';
+import { CreateModuleDto } from '../dto/create-module.dto';
+
+@Injectable()
+export class ModuleService {
+  constructor(private readonly repository: ModuleRepository) {}
+
+  async findAll() {
+    return this.repository.findAll();
+  }
+
+  async findOne(id: string) {
+    const item = await this.repository.findOne(id);
+    if (!item) {
+      throw new NotFoundException(`Item ${id} not found`);
+    }
+    return item;
+  }
+
+  async create(createDto: CreateModuleDto) {
+    return this.repository.create(createDto);
+  }
+}
+```
+
+### Repository Template (with Prisma)
+```typescript
+// module.repository.ts
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '@/common/services/prisma.service';
+
+@Injectable()
+export class ModuleRepository {
+  constructor(private prisma: PrismaService) {}
+
+  async findAll() {
+    return this.prisma.module.findMany();
+  }
+
+  async findOne(id: string) {
+    return this.prisma.module.findUnique({ where: { id } });
+  }
+
+  async create(data: CreateModuleDto) {
+    return this.prisma.module.create({ data });
+  }
+}
+```
+
+## Best Practices
+
+### 1. Architecture
+- Use modules for feature organization
+- Keep controllers thin
+- Business logic in services
+- Data access in repositories
+
+### 2. DTOs & Validation
+- Use class-validator for validation
+- Create separate DTOs for create/update
+- Document with @ApiProperty
+
+### 3. Error Handling
+- Use built-in exceptions
+- Create custom exceptions
+- Global exception filter
+
+### 4. Authentication
+- Use Guards for protection
+- JWT strategy
+- Role-based access control
+
+### 5. Testing
+- Unit tests for services
+- Integration tests for controllers
+- E2E tests for critical paths
+
+## Context7 Usage
+
+Before implementing NestJS features:
+```
+use context7 to get NestJS documentation
+use context7 to get Prisma documentation
+```
+
+## Skills to Install
+- nestjs-patterns
+- prisma-patterns
+- testing-nestjs
+- api-design
+- security

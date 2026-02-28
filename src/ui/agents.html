@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agents - Agent Team Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="/ui/css/styles.css">
+</head>
+<body>
+    <div class="container" x-data="agentApp()">
+        <!-- Header -->
+        <header class="header">
+            <h1>🤖 Agent Management</h1>
+            <p class="subtitle">Create and manage AI agents</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <a href="/ui/" class="nav-link">Dashboard</a>
+            <a href="/ui/agents.html" class="nav-link active">Agents</a>
+            <a href="/ui/skills.html" class="nav-link">Skills</a>
+            <a href="/ui/roles.html" class="nav-link">Roles</a>
+        </nav>
+
+        <!-- Add Agent Button -->
+        <div class="actions-bar">
+            <button class="btn btn-primary" @click="showAddModal = true">
+                ➕ Add New Agent
+            </button>
+        </div>
+
+        <!-- Agents List -->
+        <section class="section">
+            <div id="agents-grid" hx-get="/api/agents" hx-trigger="load, refreshAgents from:body">
+                <div class="loading">Loading agents...</div>
+            </div>
+        </section>
+
+        <!-- Add Agent Modal -->
+        <div class="modal-overlay" x-show="showAddModal" x-cloak
+             @click.self="showAddModal = false"
+             @keydown.escape.window="showAddModal = false">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>Add New Agent</h2>
+                    <button class="modal-close" @click="showAddModal = false">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Step 1: Basic Info -->
+                    <div class="form-group">
+                        <label>Agent Name</label>
+                        <input type="text" x-model="newAgent.name" placeholder="my-agent"
+                               class="input" pattern="[a-z0-9-]+">
+                        <small class="hint">Use lowercase letters, numbers, and hyphens</small>
+                    </div>
+
+                    <!-- Step 2: Select Role -->
+                    <div class="form-group">
+                        <label>Role</label>
+                        <div class="role-selector" hx-get="/api/agents/meta/roles" hx-trigger="load">
+                            <div class="loading">Loading roles...</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Select Variants (shown when role selected) -->
+                    <div x-show="newAgent.role" x-cloak class="variants-section">
+                        <h3>Select Variants</h3>
+                        <div id="variants-container"
+                             hx-get="/api/agents/meta/variants/"
+                             :hx-get="'/api/agents/meta/variants/' + newAgent.role"
+                             hx-trigger="roleSelected from:body">
+                            <div class="loading">Loading variants...</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Preview Skills -->
+                    <div x-show="newAgent.role" x-cloak class="skills-preview">
+                        <h3>Skills Preview</h3>
+                        <div id="skills-preview"
+                             hx-post="/api/agents/preview-skills"
+                             hx-include="[name='variants']"
+                             hx-vals='{"role": newAgent.role}'
+                             hx-trigger="load, change from:.variant-checkbox">
+                            <div class="loading">Calculating skills...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @click="showAddModal = false">Cancel</button>
+                    <button class="btn btn-primary" @click="createAgent()"
+                            :disabled="!newAgent.name || !newAgent.role">
+                        Create Agent
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function agentApp() {
+            return {
+                showAddModal: false,
+                newAgent: {
+                    name: '',
+                    role: '',
+                    variants: {}
+                },
+
+                selectRole(role) {
+                    this.newAgent.role = role;
+                    // Trigger variant loading
+                    htmx.trigger(document.body, 'roleSelected', { role });
+                },
+
+                toggleVariant(category, value) {
+                    if (this.newAgent.variants[category] === value) {
+                        delete this.newAgent.variants[category];
+                    } else {
+                        this.newAgent.variants[category] = value;
+                    }
+                },
+
+                async createAgent() {
+                    try {
+                        const response = await fetch('/api/agents', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.newAgent)
+                        });
+
+                        if (response.ok) {
+                            this.showAddModal = false;
+                            this.resetForm();
+                            htmx.trigger(document.body, 'refreshAgents');
+                            alert('Agent created successfully!');
+                        } else {
+                            const error = await response.json();
+                            alert('Error: ' + error.error);
+                        }
+                    } catch (error) {
+                        alert('Error creating agent: ' + error.message);
+                    }
+                },
+
+                resetForm() {
+                    this.newAgent = { name: '', role: '', variants: {} };
+                }
+            }
+        }
+
+        // Transform role list to radio buttons
+        document.body.addEventListener('htmx:beforeSwap', function(evt) {
+            if (evt.detail.pathInfo.requestPath.includes('/meta/roles')) {
+                try {
+                    const roles = JSON.parse(evt.detail.xhr.response);
+                    evt.detail.xhr.response = roles.map(r => `
+                        <label class="role-option" :class="{'selected': newAgent.role === '${r.name}'}">
+                            <input type="radio" name="role" value="${r.name}" @click="selectRole('${r.name}')">
+                            <div class="role-info">
+                                <strong>${r.name}</strong>
+                                <p>${r.description}</p>
+                            </div>
+                        </label>
+                    `).join('');
+                } catch (e) {}
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+import { useState, useCallback, useEffect } from 'react';
+
+// Types
+interface Use{{HookName}}Options {
+  // TODO: Define options
+}
+
+interface Use{{HookName}}Return {
+  // TODO: Define return type
+  data: unknown;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+/**
+ * use{{HookName}} - [Description]
+ *
+ * @param options - Configuration options
+ * @returns {Use{{HookName}}Return}
+ *
+ * @example
+ * const { data, isLoading, error } = use{{HookName}}();
+ */
+export function use{{HookName}}(
+  options: Use{{HookName}}Options = {}
+): Use{{HookName}}Return {
+  const [data, setData] = useState<unknown>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    // TODO: Implement side effects
+  }, []);
+
+  const refetch = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // TODO: Implement fetch logic
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return {
+    data,
+    isLoading,
+    error,
+  };
+}
+
+export default use{{HookName}};
