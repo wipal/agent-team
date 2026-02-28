@@ -1,7 +1,7 @@
 {
   "name": "@wipal/agent-team",
-  "version": "1.1.0",
-  "description": "CLI tool to add AI agent teams to existing projects with minimal setup",
+  "version": "2.1.0",
+  "description": "CLI tool to add AI agent teams to existing projects with specialized roles, skills, and workflows (v2.1 with OpenFang patterns)",
   "type": "module",
   "bin": {
     "agentteam": "./bin/cli.js"
@@ -17,7 +17,11 @@
     "config",
     "scripts",
     ".claude/skills",
-    ".claude/rules"
+    ".claude/rules",
+    ".claude/commands",
+    "docs",
+    "README.md",
+    "TUTORIAL.md"
   ],
   "scripts": {
     "postinstall": "node ./scripts/postinstall.js",

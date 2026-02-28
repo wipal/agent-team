@@ -1,0 +1,23 @@
+[project]
+name = "simplemem-mcp"
+version = "0.1.0"
+description = "SimpleMem MCP Server - Long-term memory for AI agents"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0.0",
+    "lancedb>=0.4.0",
+    "sentence-transformers>=2.2.0",
+    "sqlite-utils>=3.35",
+    "pydantic>=2.0.0",
+    "openai>=1.0.0",
+]
+
+[project.scripts]
+simplemem-mcp = "simplemem_mcp.server:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,72 @@
+# SimpleMem MCP Server - Docker Compose
+#
+# Usage:
+#   docker compose up -d          # Start in background
+#   docker compose logs -f        # View logs
+#   docker compose down           # Stop
+#
+# Environment variables (optional):
+#   LLM_BASE_URL  - OpenAI-compatible API endpoint (default: Ollama)
+#   LLM_API_KEY   - API key if required
+#   LLM_MODEL     - Model to use for compression/synthesis
+
+version: "3.8"
+
+services:
+  simplemem-mcp:
+    build:
+      context: ./simplemem
+      dockerfile: Dockerfile
+    container_name: simplemem-mcp
+    restart: unless-stopped
+
+    # Ports (optional - for HTTP API if needed)
+    ports:
+      - "8765:8765"
+
+    # Volumes for persistence
+    volumes:
+      # Memory data persists across restarts
+      - simplemem-data:/app/data
+      # Cache HuggingFace models to avoid re-downloading
+      - huggingface-cache:/root/.cache/huggingface
+
+    # Environment configuration
+    environment:
+      # LLM configuration (for pipeline stages)
+      - LLM_BASE_URL=${LLM_BASE_URL:-http://host.docker.internal:11434/v1}
+      - LLM_API_KEY=${LLM_API_KEY:-ollama}
+      - LLM_MODEL=${LLM_MODEL:-qwen2.5:7b}
+
+      # Embedding model
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-Qwen/Qwen3-Embedding-0.6B}
+
+      # Data directory
+      - SIMPLEMEM_DATA_DIR=/app/data
+
+    # Extra hosts for accessing host services
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    # Resource limits (optional)
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+# Named volumes for persistence
+volumes:
+  simplemem-data:
+    driver: local
+  huggingface-cache:
+    driver: local
