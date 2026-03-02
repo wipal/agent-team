@@ -26,7 +26,7 @@
 
         <!-- Add Agent Button -->
         <div class="actions-bar">
-            <button class="btn btn-primary" @click="showAddModal = true">
+            <button class="btn btn-primary" @click="openAddModal()">
                 ➕ Add New Agent
             </button>
         </div>
@@ -49,42 +49,55 @@
                 </div>
 
                 <div class="modal-body">
-                    <!-- Step 1: Basic Info -->
+                    <!-- Step 1: Agent Name -->
                     <div class="form-group">
-                        <label>Agent Name</label>
+                        <label>Agent Name *</label>
                         <input type="text" x-model="newAgent.name" placeholder="my-agent"
                                class="input" pattern="[a-z0-9-]+">
                         <small class="hint">Use lowercase letters, numbers, and hyphens</small>
                     </div>
 
-                    <!-- Step 2: Select Role -->
+                    <!-- Step 2: Select Role (Dropdown) -->
                     <div class="form-group">
-                        <label>Role</label>
-                        <div class="role-selector" hx-get="/api/agents/meta/roles" hx-trigger="load">
-                            <div class="loading">Loading roles...</div>
-                        </div>
+                        <label>Role *</label>
+                        <select x-model="newAgent.role" class="input" @change="onRoleChange()" :disabled="loadingRoles">
+                            <option value="">-- Select Role --</option>
+                            <template x-for="role in roles" :key="role.name">
+                                <option :value="role.name" x-text="role.name"></option>
+                            </template>
+                        </select>
+                        <small class="hint" x-show="selectedRoleDescription" x-text="selectedRoleDescription"></small>
                     </div>
 
-                    <!-- Step 3: Select Variants (shown when role selected) -->
-                    <div x-show="newAgent.role" x-cloak class="variants-section">
-                        <h3>Select Variants</h3>
-                        <div id="variants-container"
-                             hx-get="/api/agents/meta/variants/"
-                             :hx-get="'/api/agents/meta/variants/' + newAgent.role"
-                             hx-trigger="roleSelected from:body">
-                            <div class="loading">Loading variants...</div>
-                        </div>
+                    <!-- Step 3: Select Variants (Dropdowns) -->
+                    <div x-show="newAgent.role && Object.keys(variantCategories).length > 0" x-cloak class="variants-section">
+                        <h3>Select Variants (Optional)</h3>
+                        <template x-for="(category, key) in variantCategories" :key="key">
+                            <div class="form-group">
+                                <label x-text="category.label"></label>
+                                <select class="input" @change="selectVariant(key, $event.target.value)">
+                                    <option value="">-- Select --</option>
+                                    <template x-for="option in category.options" :key="option.value">
+                                        <option :value="option.value"
+                                                :selected="newAgent.variants[key] === option.value"
+                                                x-text="option.label"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </template>
                     </div>
 
                     <!-- Step 4: Preview Skills -->
                     <div x-show="newAgent.role" x-cloak class="skills-preview">
                         <h3>Skills Preview</h3>
-                        <div id="skills-preview"
-                             hx-post="/api/agents/preview-skills"
-                             hx-include="[name='variants']"
-                             hx-vals='{"role": newAgent.role}'
-                             hx-trigger="load, change from:.variant-checkbox">
-                            <div class="loading">Calculating skills...</div>
+                        <div x-show="loadingSkills" class="loading">Calculating skills...</div>
+                        <div x-show="!loadingSkills && previewSkills.length > 0" class="skills-list">
+                            <template x-for="skill in previewSkills" :key="skill">
+                                <span class="skill-tag" x-text="skill"></span>
+                            </template>
+                        </div>
+                        <div x-show="!loadingSkills && previewSkills.length === 0" class="hint">
+                            Select variants to see included skills
                         </div>
                     </div>
                 </div>
@@ -92,8 +105,9 @@
                 <div class="modal-footer">
                     <button class="btn btn-secondary" @click="showAddModal = false">Cancel</button>
                     <button class="btn btn-primary" @click="createAgent()"
-                            :disabled="!newAgent.name || !newAgent.role">
-                        Create Agent
+                            :disabled="!newAgent.name || !newAgent.role || creating">
+                        <span x-show="!creating">Create Agent</span>
+                        <span x-show="creating">Creating...</span>
                     </button>
                 </div>
             </div>
@@ -104,27 +118,102 @@
         function agentApp() {
             return {
                 showAddModal: false,
+                loadingRoles: false,
+                loadingSkills: false,
+                creating: false,
+                roles: [],
+                variantCategories: {},
+                previewSkills: [],
                 newAgent: {
                     name: '',
                     role: '',
                     variants: {}
                 },
 
-                selectRole(role) {
-                    this.newAgent.role = role;
-                    // Trigger variant loading
-                    htmx.trigger(document.body, 'roleSelected', { role });
+                get selectedRoleDescription() {
+                    const role = this.roles.find(r => r.name === this.newAgent.role);
+                    return role ? role.description : '';
                 },
 
-                toggleVariant(category, value) {
-                    if (this.newAgent.variants[category] === value) {
-                        delete this.newAgent.variants[category];
-                    } else {
+                async openAddModal() {
+                    this.showAddModal = true;
+                    await this.loadRoles();
+                },
+
+                async loadRoles() {
+                    if (this.roles.length > 0) return; // Already loaded
+
+                    this.loadingRoles = true;
+                    try {
+                        const response = await fetch('/api/agents/meta/roles');
+                        this.roles = await response.json();
+                    } catch (error) {
+                        console.error('Failed to load roles:', error);
+                    } finally {
+                        this.loadingRoles = false;
+                    }
+                },
+
+                async onRoleChange() {
+                    // Reset variants and skills
+                    this.newAgent.variants = {};
+                    this.previewSkills = [];
+                    this.variantCategories = {};
+
+                    if (!this.newAgent.role) return;
+
+                    // Load variants for selected role
+                    await this.loadVariants(this.newAgent.role);
+                    // Load skills preview
+                    await this.loadSkillsPreview();
+                },
+
+                async loadVariants(role) {
+                    try {
+                        const response = await fetch(`/api/agents/meta/variants/${role}`);
+                        const data = await response.json();
+                        this.variantCategories = data.categories || data;
+                    } catch (error) {
+                        console.error('Failed to load variants:', error);
+                    }
+                },
+
+                async selectVariant(category, value) {
+                    if (value) {
                         this.newAgent.variants[category] = value;
+                    } else {
+                        delete this.newAgent.variants[category];
+                    }
+                    // Update skills preview
+                    await this.loadSkillsPreview();
+                },
+
+                async loadSkillsPreview() {
+                    if (!this.newAgent.role) return;
+
+                    this.loadingSkills = true;
+                    try {
+                        const response = await fetch('/api/agents/preview-skills', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                role: this.newAgent.role,
+                                variants: this.newAgent.variants
+                            })
+                        });
+                        const data = await response.json();
+                        this.previewSkills = data.skills || data.core?.concat(data.role || []) || [];
+                    } catch (error) {
+                        console.error('Failed to load skills preview:', error);
+                    } finally {
+                        this.loadingSkills = false;
                     }
                 },
 
                 async createAgent() {
+                    if (!this.newAgent.name || !this.newAgent.role) return;
+
+                    this.creating = true;
                     try {
                         const response = await fetch('/api/agents', {
                             method: 'POST',
@@ -143,32 +232,18 @@
                         }
                     } catch (error) {
                         alert('Error creating agent: ' + error.message);
+                    } finally {
+                        this.creating = false;
                     }
                 },
 
                 resetForm() {
                     this.newAgent = { name: '', role: '', variants: {} };
+                    this.variantCategories = {};
+                    this.previewSkills = [];
                 }
             }
         }
-
-        // Transform role list to radio buttons
-        document.body.addEventListener('htmx:beforeSwap', function(evt) {
-            if (evt.detail.pathInfo.requestPath.includes('/meta/roles')) {
-                try {
-                    const roles = JSON.parse(evt.detail.xhr.response);
-                    evt.detail.xhr.response = roles.map(r => `
-                        <label class="role-option" :class="{'selected': newAgent.role === '${r.name}'}">
-                            <input type="radio" name="role" value="${r.name}" @click="selectRole('${r.name}')">
-                            <div class="role-info">
-                                <strong>${r.name}</strong>
-                                <p>${r.description}</p>
-                            </div>
-                        </label>
-                    `).join('');
-                } catch (e) {}
-            }
-        });
     </script>
 </body>
 </html>
