@@ -10,10 +10,26 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
+        <!-- Header with Project Selector -->
         <header class="header">
-            <h1>🤖 Agent Team Dashboard</h1>
-            <p class="subtitle">Manage AI agents for your project</p>
+            <div class="header-row">
+                <div>
+                    <h1>🤖 Agent Team Dashboard</h1>
+                    <p class="subtitle">Manage AI agents for your project</p>
+                </div>
+                <!-- Project Selector -->
+                <div class="project-selector" x-data="projectSelector()">
+                    <label>Project:</label>
+                    <select @change="switchProject($event)" x-model="currentProject" :disabled="loading">
+                        <template x-for="project in projects" :key="project.path">
+                            <option :value="project.path" :selected="project.path === currentProject">
+                                <span x-text="project.name"></span>
+                            </option>
+                        </template>
+                    </select>
+                    <span x-show="loading" class="loading-indicator">Switching...</span>
+                </div>
+            </div>
         </header>
 
         <!-- Navigation -->
@@ -25,7 +41,7 @@
         </nav>
 
         <!-- Stats Cards -->
-        <div class="stats-grid" hx-get="/api/agents" hx-trigger="load" hx-swap="innerHTML">
+        <div class="stats-grid" hx-get="/api/agents" hx-trigger="load, projectChanged from:body" hx-swap="innerHTML">
             <!-- Loaded via HTMX -->
             <div class="loading">Loading...</div>
         </div>
@@ -49,7 +65,7 @@
         <!-- Recent Agents -->
         <section class="section">
             <h2>Your Agents</h2>
-            <div id="agents-list" hx-get="/api/agents" hx-trigger="load">
+            <div id="agents-list" hx-get="/api/agents" hx-trigger="load, projectChanged from:body">
                 <div class="loading">Loading agents...</div>
             </div>
         </section>
@@ -64,13 +80,75 @@
     </div>
 
     <script>
+        // Project Selector Alpine Component
+        function projectSelector() {
+            return {
+                projects: [],
+                currentProject: '',
+                loading: false,
+
+                async init() {
+                    await this.loadProjects();
+                    await this.loadCurrentProject();
+                },
+
+                async loadProjects() {
+                    try {
+                        const response = await fetch('/api/projects');
+                        const data = await response.json();
+                        this.projects = data.projects.filter(p => p.valid);
+                    } catch (error) {
+                        console.error('Failed to load projects:', error);
+                    }
+                },
+
+                async loadCurrentProject() {
+                    try {
+                        const response = await fetch('/api/projects/current');
+                        const project = await response.json();
+                        this.currentProject = project.path;
+                    } catch (error) {
+                        console.error('Failed to load current project:', error);
+                    }
+                },
+
+                async switchProject(event) {
+                    const newPath = event.target.value;
+                    if (newPath === this.currentProject) return;
+
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/projects/switch', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: newPath })
+                        });
+
+                        if (response.ok) {
+                            this.currentProject = newPath;
+                            // Trigger HTMX refresh
+                            document.body.dispatchEvent(new CustomEvent('projectChanged'));
+                        } else {
+                            const error = await response.json();
+                            alert('Failed to switch project: ' + error.error);
+                        }
+                    } catch (error) {
+                        alert('Failed to switch project: ' + error.message);
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+
         // Transform stats response
         document.body.addEventListener('htmx:beforeSwap', function(evt) {
             if (evt.detail.pathInfo.requestPath === '/api/agents') {
                 // First load - render as stats
                 if (evt.detail.target.matches('.stats-grid')) {
                     try {
-                        const agents = JSON.parse(evt.detail.xhr.response);
+                        const data = JSON.parse(evt.detail.xhr.response);
+                        const agents = data.agents || [];
                         const statsHtml = renderStats(agents);
                         evt.detail.swap = 'innerHTML';
                         evt.detail.xhr.response = statsHtml;
@@ -93,11 +171,11 @@
                     <div class="stat-label">Roles Used</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">37</div>
+                    <div class="stat-value">50</div>
                     <div class="stat-label">Skills Available</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">7</div>
+                    <div class="stat-value">9</div>
                     <div class="stat-label">Roles Available</div>
                 </div>
             `;

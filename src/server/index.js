@@ -10,6 +10,7 @@ import open from 'open';
 import agentsRouter from './api/agents.js';
 import rolesRouter from './api/roles.js';
 import skillsRouter from './api/skills.js';
+import projectsRouter from './api/projects.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +38,7 @@ export function createApp(projectRoot = process.cwd()) {
   app.use('/api/agents', agentsRouter);
   app.use('/api/roles', rolesRouter);
   app.use('/api/skills', skillsRouter);
+  app.use('/api/projects', projectsRouter);
 
   // Main page redirect
   app.get('/', (req, res) => {
