@@ -1,6 +1,6 @@
 {
   "name": "@wipal/agent-team",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "CLI tool to add AI agent teams to existing projects with specialized roles, skills, and workflows (v2.1 with OpenFang patterns)",
   "type": "module",
   "bin": {

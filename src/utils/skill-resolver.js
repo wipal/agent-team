@@ -542,14 +542,21 @@ export function resolveSkills(role, variants = {}) {
     result.role = [...ROLE_SKILL_MAP[role]];
   }
 
-  // Add variant-specific skills
+  // Add variant-specific skills (supports both single values and arrays for multi-select)
   for (const [category, value] of Object.entries(variants)) {
     if (value) {
-      const key = `${category}:${value}`;
-      if (VARIANT_SKILL_MAP[key]) {
-        for (const skill of VARIANT_SKILL_MAP[key]) {
-          if (!result.variants.includes(skill) && !result.role.includes(skill)) {
-            result.variants.push(skill);
+      // Handle both single value and array of values
+      const values = Array.isArray(value) ? value : [value];
+
+      for (const v of values) {
+        if (v) {
+          const key = `${category}:${v}`;
+          if (VARIANT_SKILL_MAP[key]) {
+            for (const skill of VARIANT_SKILL_MAP[key]) {
+              if (!result.variants.includes(skill) && !result.role.includes(skill)) {
+                result.variants.push(skill);
+              }
+            }
           }
         }
       }

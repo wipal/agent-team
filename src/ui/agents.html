@@ -45,8 +45,14 @@
                             <span class="agent-role" x-text="agent.variants?.base_role || 'unknown'"></span>
                         </div>
                         <div class="agent-variants">
-                            <template x-for="(value, key) in agent.variants" :key="key">
-                                <span class="variant-tag" x-text="key + ': ' + value"></span>
+                            <template x-for="(value, key) in agent.variants" :key="key + 'variant-' + key">
+                                <template x-if="Array.isArray(value)">
+                                    <template x-for="v in value" :key="v">
+                                        <span class="variant-tag" x-text="key + ': ' + v"></span>
+                                    </template>
+                                <template x-else>
+                                    <span class="variant-tag" x-text="key + ': ' + value"></span>
+                                </template>
                             </template>
                         </div>
                         <div class="agent-skills" x-show="agent.skills?.length">
@@ -93,20 +99,39 @@
                         <small class="hint" x-show="selectedRoleDescription" x-text="selectedRoleDescription"></small>
                     </div>
 
-                    <!-- Step 3: Select Variants (Dropdowns) -->
+                    <!-- Step 3: Select Variants (Dropdowns or Checkboxes) -->
                     <div x-show="newAgent.role && Object.keys(variantCategories).length > 0" x-cloak class="variants-section">
                         <h3>Select Variants (Optional)</h3>
                         <template x-for="(category, key) in variantCategories" :key="key">
                             <div class="form-group">
                                 <label x-text="category.label"></label>
-                                <select class="input" @change="selectVariant(key, $event.target.value)">
-                                    <option value="">-- Select --</option>
-                                    <template x-for="option in category.options" :key="option.value">
-                                        <option :value="option.value"
-                                                :selected="newAgent.variants[key] === option.value"
-                                                x-text="option.label"></option>
-                                    </template>
-                                </select>
+
+                                <!-- Multi-select (checkbox type) -->
+                                <template x-if="category.type === 'checkbox'">
+                                    <div class="checkbox-group">
+                                        <template x-for="option in category.options" :key="option.value">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox"
+                                                       :value="option.value"
+                                                       @change="selectVariant(key, option.value, true)"
+                                                       :checked="isVariantSelected(key, option.value)">
+                                                <span x-text="option.label"></span>
+                                            </label>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- Single-select (select type) -->
+                                <template x-if="category.type !== 'checkbox'">
+                                    <select class="input" @change="selectVariant(key, $event.target.value, false)">
+                                        <option value="">-- Select --</option>
+                                        <template x-for="option in category.options" :key="option.value">
+                                            <option :value="option.value"
+                                                    :selected="newAgent.variants[key] === option.value"
+                                                    x-text="option.label"></option>
+                                        </template>
+                                    </select>
+                                </template>
                             </div>
                         </template>
                     </div>
@@ -236,12 +261,41 @@
                     }
                 },
 
-                async selectVariant(category, value) {
-                    if (value) {
-                        this.newAgent.variants[category] = value;
-                    } else {
-                        delete this.newAgent.variants[category];
+                isVariantSelected(category, value) {
+                    const selected = this.newAgent.variants[category];
+                    if (Array.isArray(selected)) {
+                        return selected.includes(value);
                     }
+                    return selected === value;
+                },
+
+                async selectVariant(category, value, isMulti = false) {
+                    if (isMulti) {
+                        // Multi-select: toggle value in array
+                        if (!this.newAgent.variants[category]) {
+                            this.newAgent.variants[category] = [];
+                        }
+
+                        const index = this.newAgent.variants[category].indexOf(value);
+                        if (index > -1) {
+                            // Remove if already selected
+                            this.newAgent.variants[category].splice(index, 1);
+                            if (this.newAgent.variants[category].length === 0) {
+                                delete this.newAgent.variants[category];
+                            }
+                        } else {
+                            // Add if not selected
+                            this.newAgent.variants[category].push(value);
+                        }
+                    } else {
+                        // Single select: replace value
+                        if (value) {
+                            this.newAgent.variants[category] = value
+                        } else {
+                            delete this.newAgent.variants[category];
+                        }
+                    }
+
                     // Update skills preview
                     await this.loadSkillsPreview();
                 },
@@ -299,7 +353,9 @@
                     this.newAgent = { name: '', role: '', variants: {} };
                     this.variantCategories = {};
                     this.previewSkills = [];
-                }
+                    // Force Alpine to re-render by reassigning
+                    this.$forceUpdate();
+                },
             }
         }
     </script>
