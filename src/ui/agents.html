@@ -33,8 +33,32 @@
 
         <!-- Agents List -->
         <section class="section">
-            <div id="agents-grid" hx-get="/api/agents" hx-trigger="load, refreshAgents from:body">
-                <div class="loading">Loading agents...</div>
+            <div id="agents-grid">
+                <div x-show="loadingAgents" class="loading">Loading agents...</div>
+                <div x-show="!loadingAgents && agents.length === 0" class="empty-state">
+                    <p>No agents yet. <a href="#" @click.prevent="openAddModal()">Add your first agent</a></p>
+                </div>
+                <template x-for="agent in agents" :key="agent.name">
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <span class="agent-name" x-text="agent.name"></span>
+                            <span class="agent-role" x-text="agent.variants?.base_role || 'unknown'"></span>
+                        </div>
+                        <div class="agent-variants">
+                            <template x-for="(value, key) in agent.variants" :key="key">
+                                <span class="variant-tag" x-text="key + ': ' + value"></span>
+                            </template>
+                        </div>
+                        <div class="agent-skills" x-show="agent.skills?.length">
+                            <template x-for="skill in agent.skills" :key="skill">
+                                <span class="skill-tag" x-text="skill"></span>
+                            </template>
+                        </div>
+                        <div class="agent-actions">
+                            <button class="btn btn-danger" @click="deleteAgent(agent.name)">Delete</button>
+                        </div>
+                    </div>
+                </template>
             </div>
         </section>
 
@@ -118,9 +142,11 @@
         function agentApp() {
             return {
                 showAddModal: false,
+                loadingAgents: true,
                 loadingRoles: false,
                 loadingSkills: false,
                 creating: false,
+                agents: [],
                 roles: [],
                 variantCategories: {},
                 previewSkills: [],
@@ -128,6 +154,38 @@
                     name: '',
                     role: '',
                     variants: {}
+                },
+
+                async init() {
+                    await this.loadAgents();
+                },
+
+                async loadAgents() {
+                    this.loadingAgents = true;
+                    try {
+                        const response = await fetch('/api/agents');
+                        const data = await response.json();
+                        this.agents = data.agents || [];
+                    } catch (error) {
+                        console.error('Failed to load agents:', error);
+                    } finally {
+                        this.loadingAgents = false;
+                    }
+                },
+
+                async deleteAgent(name) {
+                    if (!confirm(`Delete agent "${name}"?`)) return;
+                    try {
+                        const response = await fetch(`/api/agents/${name}`, { method: 'DELETE' });
+                        if (response.ok) {
+                            await this.loadAgents();
+                        } else {
+                            const error = await response.json();
+                            alert('Failed to delete: ' + error.error);
+                        }
+                    } catch (error) {
+                        alert('Failed to delete agent: ' + error.message);
+                    }
                 },
 
                 get selectedRoleDescription() {
@@ -224,7 +282,7 @@
                         if (response.ok) {
                             this.showAddModal = false;
                             this.resetForm();
-                            htmx.trigger(document.body, 'refreshAgents');
+                            await this.loadAgents();
                             alert('Agent created successfully!');
                         } else {
                             const error = await response.json();

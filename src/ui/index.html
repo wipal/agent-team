@@ -41,9 +41,18 @@
         </nav>
 
         <!-- Stats Cards -->
-        <div class="stats-grid" hx-get="/api/agents" hx-trigger="load, projectChanged from:body" hx-swap="innerHTML">
-            <!-- Loaded via HTMX -->
-            <div class="loading">Loading...</div>
+        <div class="stats-grid" x-data="statsCards()">
+            <template x-if="loading">
+                <div class="stat-card"><div class="loading">Loading...</div></div>
+            </template>
+            <template x-if="!loading">
+                <template x-for="stat in stats" :key="stat.label">
+                    <div class="stat-card">
+                        <div class="stat-value" x-text="stat.value"></div>
+                        <div class="stat-label" x-text="stat.label"></div>
+                    </div>
+                </template>
+            </template>
         </div>
 
         <!-- Quick Actions -->
@@ -65,16 +74,36 @@
         <!-- Recent Agents -->
         <section class="section">
             <h2>Your Agents</h2>
-            <div id="agents-list" hx-get="/api/agents" hx-trigger="load, projectChanged from:body">
-                <div class="loading">Loading agents...</div>
+            <div id="agents-list" x-data="dashboardAgents()">
+                <div x-show="loading" class="loading">Loading agents...</div>
+                <div x-show="!loading && agents.length === 0" class="empty-state">
+                    <p>No agents configured yet. <a href="/ui/agents.html?action=add">Add your first agent</a></p>
+                </div>
+                <template x-for="agent in agents" :key="agent.name">
+                    <div class="agent-card-compact">
+                        <span class="agent-name" x-text="agent.name"></span>
+                        <span class="agent-role" x-text="agent.variants?.base_role || 'unknown'"></span>
+                    </div>
+                </template>
+                <div x-show="!loading && agents.length > 0" style="margin-top: 1rem;">
+                    <a href="/ui/agents.html" class="btn btn-secondary">Manage Agents</a>
+                </div>
             </div>
         </section>
 
         <!-- Available Roles -->
         <section class="section">
             <h2>Available Roles</h2>
-            <div id="roles-list" hx-get="/api/agents/meta/roles" hx-trigger="load">
-                <div class="loading">Loading roles...</div>
+            <div id="roles-list" x-data="rolesPreview()">
+                <div x-show="loading" class="loading">Loading roles...</div>
+                <div class="roles-grid-preview">
+                    <template x-for="role in roles" :key="role.name">
+                        <div class="role-chip">
+                            <strong x-text="role.name"></strong>
+                            <span x-text="role.description"></span>
+                        </div>
+                    </template>
+                </div>
             </div>
         </section>
     </div>
@@ -141,44 +170,85 @@
             }
         }
 
-        // Transform stats response
-        document.body.addEventListener('htmx:beforeSwap', function(evt) {
-            if (evt.detail.pathInfo.requestPath === '/api/agents') {
-                // First load - render as stats
-                if (evt.detail.target.matches('.stats-grid')) {
+        // Dashboard Agents Alpine Component
+        function dashboardAgents() {
+            return {
+                agents: [],
+                loading: true,
+
+                async init() {
+                    await this.loadAgents();
+                    // Listen for project changes
+                    document.body.addEventListener('projectChanged', () => this.loadAgents());
+                },
+
+                async loadAgents() {
+                    this.loading = true;
                     try {
-                        const data = JSON.parse(evt.detail.xhr.response);
-                        const agents = data.agents || [];
-                        const statsHtml = renderStats(agents);
-                        evt.detail.swap = 'innerHTML';
-                        evt.detail.xhr.response = statsHtml;
-                    } catch (e) {}
+                        const response = await fetch('/api/agents');
+                        const data = await response.json();
+                        this.agents = data.agents || [];
+                    } catch (error) {
+                        console.error('Failed to load agents:', error);
+                    } finally {
+                        this.loading = false;
+                    }
                 }
             }
-        });
+        }
 
-        function renderStats(agents) {
-            const total = agents.length;
-            const roles = [...new Set(agents.map(a => a.variants?.base_role).filter(Boolean))];
+        // Roles Preview Alpine Component
+        function rolesPreview() {
+            return {
+                roles: [],
+                loading: true,
 
-            return `
-                <div class="stat-card">
-                    <div class="stat-value">${total}</div>
-                    <div class="stat-label">Total Agents</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${roles.length}</div>
-                    <div class="stat-label">Roles Used</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">50</div>
-                    <div class="stat-label">Skills Available</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">9</div>
-                    <div class="stat-label">Roles Available</div>
-                </div>
-            `;
+                async init() {
+                    try {
+                        const response = await fetch('/api/agents/meta/roles');
+                        this.roles = await response.json();
+                    } catch (error) {
+                        console.error('Failed to load roles:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+
+        // Stats Cards Alpine Component
+        function statsCards() {
+            return {
+                stats: [],
+                loading: true,
+
+                async init() {
+                    await this.loadStats();
+                    // Listen for project changes
+                    document.body.addEventListener('projectChanged', () => this.loadStats());
+                },
+
+                async loadStats() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/agents');
+                        const data = await response.json();
+                        const agents = data.agents || [];
+                        const roles = [...new Set(agents.map(a => a.variants?.base_role).filter(Boolean))];
+
+                        this.stats = [
+                            { value: agents.length, label: 'Total Agents' },
+                            { value: roles.length, label: 'Roles Used' },
+                            { value: 50, label: 'Skills Available' },
+                            { value: 9, label: 'Roles Available' }
+                        ];
+                    } catch (error) {
+                        console.error('Failed to load stats:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
         }
     </script>
 </body>
