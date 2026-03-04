@@ -45,14 +45,8 @@
                             <span class="agent-role" x-text="agent.variants?.base_role || 'unknown'"></span>
                         </div>
                         <div class="agent-variants">
-                            <template x-for="(value, key) in agent.variants" :key="key + 'variant-' + key">
-                                <template x-if="Array.isArray(value)">
-                                    <template x-for="v in value" :key="v">
-                                        <span class="variant-tag" x-text="key + ': ' + v"></span>
-                                    </template>
-                                <template x-else>
-                                    <span class="variant-tag" x-text="key + ': ' + value"></span>
-                                </template>
+                            <template x-for="(value, key) in agent.variants" :key="key">
+                                <span class="variant-tag" x-text="key + ': ' + (Array.isArray(value) ? value.join(', ') : value)"></span>
                             </template>
                         </div>
                         <div class="agent-skills" x-show="agent.skills?.length">
@@ -290,7 +284,7 @@
                     } else {
                         // Single select: replace value
                         if (value) {
-                            this.newAgent.variants[category] = value
+                            this.newAgent.variants[category] = value;
                         } else {
                             delete this.newAgent.variants[category];
                         }
